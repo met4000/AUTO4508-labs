@@ -48,16 +48,16 @@ turn_to_closest(angular_speed=SCAN_TURN_SPEED)
 follow_wall_until_distance(DISTANCE_FROM_WALL_MM, speed=FORWARD_SPEED)
 
 # go to a corner
-VWTurn(90, FAST_TURN_SPEED); VWWait()
+VWTurn(-90, FAST_TURN_SPEED); VWWait()
 follow_wall_until_distance(DISTANCE_FROM_WALL_MM, speed=FORWARD_SPEED)
-VWTurn(90, FAST_TURN_SPEED); VWWait()
+VWTurn(-90, FAST_TURN_SPEED); VWWait()
 
 # 'lawnmower' pattern
 final_row = False
 flip_turn = False
 while not final_row:
     follow_wall_until_distance(DISTANCE_FROM_WALL_MM, speed=FORWARD_SPEED)
-    VWTurn(90 * (-1 if flip_turn else 1), FAST_TURN_SPEED); VWWait()
+    VWTurn(-90 * (-1 if flip_turn else 1), FAST_TURN_SPEED); VWWait()
 
     VWStraight(DISTANCE_BETWEEN_PASSES_MM, FORWARD_SPEED)
     while not VWDone():
@@ -65,7 +65,7 @@ while not final_row:
             final_row = True
             break
 
-    VWTurn(90 * (-1 if flip_turn else 1), FAST_TURN_SPEED); VWWait()
+    VWTurn(-90 * (-1 if flip_turn else 1), FAST_TURN_SPEED); VWWait()
     flip_turn = not flip_turn
 
 # final row
