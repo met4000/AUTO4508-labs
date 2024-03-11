@@ -1,37 +1,28 @@
 from math import inf
 import time
 from typing import Optional
-from eye import * # type: ignore
+from eyepy import *
 
-def VWStop(*, left_motor, right_motor):
-    MOTORDrive(left_motor, 0)
-    MOTORDrive(right_motor, 0)
-
-def turn_to_closest(*, turn_speed = 100, encoder = 1, left_motor = 1, right_motor = 3):
+def turn_to_closest(*, turn_speed = 100, encoder: EncoderPort = 1, left_motor: MotorPort = 1, right_motor: MotorPort = 3):
     ENCODERReset(encoder)
-    MOTORDrive(left_motor, -turn_speed)
-    MOTORDrive(right_motor, turn_speed)
+    MOTORDualDrive(left_motor, right_motor, offset=turn_speed)
 
-    start_time = round(time.time()*1000)
+    start_time = OSGetCount()
     min_dst = inf
     min_dst_time = start_time
-    while round(time.time()*1000) - start_time < 12000:
+    while OSGetCount() - start_time < 12000:
         front_distance = PSDGet(PSD_FRONT)
         if front_distance < min_dst:
             min_dst = front_distance
-            min_dst_time = round(time.time()*1000)
-    final_time = round(time.time()*1000)
-    VWStop(left_motor=left_motor, right_motor=right_motor)
+            min_dst_time = OSGetCount()
+    final_time = OSGetCount()
+    MOTORDualDrive(left_motor, right_motor, speed=0)
 
-    MOTORDrive(left_motor, turn_speed)
-    MOTORDrive(right_motor, -turn_speed)
-    while round(time.time()*1000) - final_time < final_time - min_dst_time: pass
-    VWStop(left_motor=left_motor, right_motor=right_motor)
+    MOTORDualDrive(left_motor, right_motor, offset=turn_speed)
+    while OSGetCount() - final_time < final_time - min_dst_time: pass
+    MOTORDualDrive(left_motor, right_motor, speed=0)
 
-def clamp(n, min_n = -100, max_n = 100):
-    return max(min(n, max_n), min_n)
-
-def follow_wall_until_distance(stop_distance_mm: int, *, wall_distance_mm: Optional[int] = None, target_speed = 80, psd = PSD_RIGHT, left_motor = 1, right_motor = 3):
+def follow_wall_until_distance(stop_distance_mm: int, *, wall_distance_mm: Optional[int] = None, target_speed = 80, psd: PSDPort = PSD_RIGHT, left_motor: MotorPort = 1, right_motor: MotorPort = 3):
     target_distance_mm = wall_distance_mm if wall_distance_mm else PSDGet(psd)
 
     kp = 0.04
@@ -49,18 +40,16 @@ def follow_wall_until_distance(stop_distance_mm: int, *, wall_distance_mm: Optio
         delta = last_value - side_distance_mm
 
         offset = error * kp + err_sum * ki + delta * kd
-        MOTORDrive(left_motor, clamp(round(target_speed - offset)))
-        MOTORDrive(right_motor, clamp(round(target_speed + offset)))
+        MOTORDualDrive(left_motor, right_motor, speed=target_speed, offset=offset)
 
         last_value = side_distance_mm
 
-    VWStop(left_motor=left_motor, right_motor=right_motor)
+    MOTORDualDrive(left_motor, right_motor, speed=0)
 
-def turn_left_90(left_motor = 1, right_motor = 3):
-    MOTORDrive(left_motor, -100)
-    MOTORDrive(right_motor, 100)
+def turn_left_90(left_motor: MotorPort = 1, right_motor: MotorPort = 3):
+    MOTORDualDrive(left_motor, right_motor, offset=100)
     OSWait(3000)
-    VWStop(left_motor=left_motor, right_motor=right_motor)
+    MOTORDualDrive(left_motor, right_motor, speed=0)
 
 
 DISTANCE_FROM_WALL_MM = 1500
@@ -71,10 +60,9 @@ SCAN_TURN_SPEED = 100
 
 
 # get PSD in range of a wall
-MOTORDrive(1, 100)
-MOTORDrive(3, 100)
+MOTORDualDrive(1, 3, speed=100)
 while all([dst > 7500 for dst in [PSDGet(PSD_FRONT), PSDGet(PSD_LEFT), PSDGet(PSD_RIGHT)]]): pass
-VWStop(left_motor=1, right_motor=3)
+MOTORDualDrive(1, 3, speed=0)
 
 # go to nearest wall
 turn_to_closest(turn_speed=SCAN_TURN_SPEED)
@@ -90,4 +78,4 @@ for _ in range(4):
     follow_wall_until_distance(DISTANCE_FROM_WALL_MM - FRONT_TO_SIDE_PSD, target_speed=FORWARD_SPEED, wall_distance_mm=DISTANCE_FROM_WALL_MM)
     turn_left_90()
 
-VWStop(left_motor=1, right_motor=3)
+MOTORDualDrive(1, 3, speed=0)

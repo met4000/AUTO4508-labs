@@ -6,12 +6,15 @@
     "CAMPIXELS",
     "CAMSIZE",
     "CAMWIDTH",
+    "coeff",
     "eyepy",
+    "eyesim's",
     "LIGHTGRAY",
     "mmps",
     "MOTORPID",
     "NOKEY",
-    "QQVGA"
+    "QQVGA",
+    "usleep"
   ],
   "python.analysis.extraPaths": [
     "${workspaceFolder}/lib",
