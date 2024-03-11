@@ -1,0 +1,18 @@
+{
+  "cSpell.words": [
+    "ANYKEY",
+    "CAMHD",
+    "CAMHEIGHT",
+    "CAMPIXELS",
+    "CAMSIZE",
+    "CAMWIDTH",
+    "eyepy",
+    "LIGHTGRAY",
+    "mmps",
+    "NOKEY",
+    "QQVGA"
+  ],
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/lib",
+  ]
+}
