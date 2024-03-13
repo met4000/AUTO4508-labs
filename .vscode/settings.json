@@ -7,6 +7,7 @@
     "CAMSIZE",
     "CAMWIDTH",
     "coeff",
+    "DARKGRAY",
     "eyepy",
     "eyesim's",
     "LIGHTGRAY",
@@ -18,5 +19,6 @@
   ],
   "python.analysis.extraPaths": [
     "${workspaceFolder}/lib",
-  ]
+  ],
+  "editor.suggest.snippetsPreventQuickSuggestions": true
 }
