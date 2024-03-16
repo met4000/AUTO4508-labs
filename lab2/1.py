@@ -29,12 +29,18 @@ def SplineDrive(*, x: int, y: int, alpha: int):
     v_by = path_length * math.sin(alpha)
 
     VWSetPosition(x=0, y=0, phi=0)
-    
-    for u in range(1, n_steps + 1):
-        u /= n_steps
 
-        sp_x = H1(u) * ax + H2(u) * bx + H3(u) * v_ax + H4(u) * v_bx
-        sp_y = H1(u) * ay + H2(u) * by + H3(u) * v_ay + H4(u) * v_by
+    path: list[tuple[float, float]] = []
+    for u in range(n_steps + 1):
+        u /= n_steps
+        path.append((
+            H1(u) * ax + H2(u) * bx + H3(u) * v_ax + H4(u) * v_bx,
+            H1(u) * ay + H2(u) * by + H3(u) * v_ay + H4(u) * v_by
+        ))
+    
+    for i in range(len(path)):
+        sp_x = path[i][0]
+        sp_y = path[i][1]
 
         current_x, current_y, current_phi = VWGetPosition()
 
@@ -44,12 +50,17 @@ def SplineDrive(*, x: int, y: int, alpha: int):
         rotation = target_phi - current_phi
 
         rotation_radians = rotation / 180 * math.pi
-        radius = math.sqrt(err_x**2 + err_y**2) / 2 / math.sin(rotation_radians / 2)
+        ratio = math.sin(rotation_radians / 2)
+        radius = math.sqrt(err_x**2 + err_y**2) / 2 / ratio if ratio != 0 else 0
 
         distance = rotation_radians * radius
         VWCurve(dist=round(distance), angle=round(rotation), lin_speed=500)
         VWWait()
 
-SplineDrive(x=1000, y=1500, alpha=90)
-OSWait(5000)
-SplineDrive(x=1000, y=1500, alpha=0)
+# SplineDrive(x=1500, y=-1000, alpha=90)
+
+SplineDrive(x=1000, y=0, alpha=0)
+# SplineDrive(x=0, y=1000, alpha=90)
+# SplineDrive(x=0, y=1000, alpha=0)
+# SplineDrive(x=-500, y=-10, alpha=0)
+# SplineDrive(x=-500, y=200, alpha=-90)
