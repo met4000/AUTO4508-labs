@@ -14,25 +14,26 @@ def H3(u):
 def H4(u):
     return u**3 - u**2
 
-def SplineDrive(*, x: int, y: int, alpha: int):
+def SplineDrive(*, dx: int, dy: int, alpha: int):
     lin_speed = 400
     lookahead = 0.06
     end_threshold = 0.06
     kp = 1.6
 
-    ax = 0
-    ay = 0
-    bx = x
-    by = y
+    ax, ay, start_angle = VWGetPosition()
+    start_angle_rads = start_angle * math.pi / 180
+    bx = ax + dx * math.cos(start_angle_rads) + dy * math.sin(start_angle_rads)
+    by = ay + dx * math.sin(start_angle_rads) + dy * math.cos(start_angle_rads)
 
-    path_length = math.sqrt(x**2 + y**2)
+    path_length = math.sqrt(dx**2 + dy**2)
+    final_angle = start_angle + alpha
+    final_angle_rads = final_angle * math.pi / 180
+
     v_k = 2
-    v_ax = path_length * v_k
-    v_ay = 0
-    v_bx = path_length * v_k * math.cos(alpha)
-    v_by = path_length * v_k * math.sin(alpha)
-
-    VWSetPosition(x=0, y=0, phi=0)
+    v_ax = path_length * v_k * math.cos(start_angle_rads)
+    v_ay = path_length * v_k * math.sin(start_angle_rads)
+    v_bx = path_length * v_k * math.cos(final_angle_rads)
+    v_by = path_length * v_k * math.sin(final_angle_rads)
 
     def spline(u: float) -> tuple[float, float]:
         return (
@@ -50,12 +51,12 @@ def SplineDrive(*, x: int, y: int, alpha: int):
         tracking_x, tracking_y = spline(min(tracking_u, 1.0))
         current_x, current_y, current_bearing = VWGetPosition()
 
-        dx = tracking_x - current_x
-        dy = tracking_y - current_y
-        if tracking_u > 1.0 and math.sqrt(dx**2 + dy**2) / path_length < end_threshold:
+        offset_x = tracking_x - current_x
+        offset_y = tracking_y - current_y
+        if tracking_u > 1.0 and math.sqrt(offset_x**2 + offset_y**2) / path_length < end_threshold:
             break
 
-        tracking_bearing = math.atan2(dy, dx) * 180 / math.pi
+        tracking_bearing = math.atan2(offset_y, offset_x) * 180 / math.pi
         err_angle = tracking_bearing - current_bearing
 
         ang_speed = kp * err_angle
@@ -63,10 +64,15 @@ def SplineDrive(*, x: int, y: int, alpha: int):
 
     VWStop()
 
+    VWTurn(final_angle - VWGetPosition().phi, ang_speed=90)
+
 from eye import SIMSetRobot
 SIMSetRobot(0, 225, 210, 4, 0)
 
-SplineDrive(x=1000, y=1500, alpha=0)
+# SplineDrive(x=1000, y=1000, alpha=0)
+SplineDrive(dx=500, dy=1500, alpha=90)
+OSWait(5000)
+SplineDrive(dx=500, dy=1500, alpha=90)
 
 # SplineDrive(x=1000, y=0, alpha=0)
 # SplineDrive(x=0, y=1000, alpha=90)
