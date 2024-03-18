@@ -20,20 +20,20 @@ def SplineDrive(*, dx: int, dy: int, alpha: int):
     end_threshold = 0.06
     kp = 1.6
 
-    ax, ay, start_angle = VWGetPosition()
-    start_angle_rads = start_angle * math.pi / 180
-    bx = ax + dx * math.cos(start_angle_rads) + dy * math.sin(start_angle_rads)
-    by = ay + dx * math.sin(start_angle_rads) + dy * math.cos(start_angle_rads)
+    ax = 0
+    ay = 0
+    bx = dx
+    by = dy
 
-    path_length = math.sqrt(dx**2 + dy**2)
-    final_angle = start_angle + alpha
-    final_angle_rads = final_angle * math.pi / 180
+    final_angle = alpha
 
-    v_k = 2
-    v_ax = path_length * v_k * math.cos(start_angle_rads)
-    v_ay = path_length * v_k * math.sin(start_angle_rads)
-    v_bx = path_length * v_k * math.cos(final_angle_rads)
-    v_by = path_length * v_k * math.sin(final_angle_rads)
+    v_len = 2 * math.sqrt(dx**2 + dy**2)
+    v_ax = v_len
+    v_ay = 0
+    v_bx = v_len * math.cos(alpha)
+    v_by = v_len * math.sin(alpha)
+
+    VWSetPosition(x=0, y=0, phi=0)
 
     def spline(u: float) -> tuple[float, float]:
         return (
@@ -41,7 +41,8 @@ def SplineDrive(*, dx: int, dy: int, alpha: int):
             H1(u) * ay + H2(u) * by + H3(u) * v_ay + H4(u) * v_by
         )
     
-    path_duration_ms = path_length / lin_speed * 1000
+    approx_path_length = v_len / 2
+    path_duration_ms = approx_path_length / lin_speed * 1000
     initial_ms = OSGetCount()
     while True:
         current_ms = OSGetCount() - initial_ms
@@ -53,7 +54,7 @@ def SplineDrive(*, dx: int, dy: int, alpha: int):
 
         offset_x = tracking_x - current_x
         offset_y = tracking_y - current_y
-        if tracking_u > 1.0 and math.sqrt(offset_x**2 + offset_y**2) / path_length < end_threshold:
+        if tracking_u > 1.0 and math.sqrt(offset_x**2 + offset_y**2) / approx_path_length < end_threshold:
             break
 
         tracking_bearing = math.atan2(offset_y, offset_x) * 180 / math.pi
@@ -70,9 +71,7 @@ from eye import SIMSetRobot
 SIMSetRobot(0, 225, 210, 4, 0)
 
 # SplineDrive(x=1000, y=1000, alpha=0)
-SplineDrive(dx=500, dy=1500, alpha=90)
-OSWait(5000)
-SplineDrive(dx=500, dy=1500, alpha=90)
+SplineDrive(dx=500, dy=1500, alpha=-145)
 
 # SplineDrive(x=1000, y=0, alpha=0)
 # SplineDrive(x=0, y=1000, alpha=90)
