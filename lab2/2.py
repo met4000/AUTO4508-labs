@@ -15,10 +15,9 @@ def H4(u: float) -> float:
     return u**3 - u**2
 
 def SplineDriveAbs(*, x: int, y: int, alpha: int):
-    lin_speed = 400
-    lookahead = 0.07
-    end_threshold = 0.07 * 2
-    kp = 1.6
+    lin_speed = 300
+    ang_speed = 60
+    n_steps = 20
 
     start_x, start_y, start_bearing_degs = VWGetPosition()
     target_x, target_y, target_bearing_degs = x, y, alpha
@@ -41,32 +40,25 @@ def SplineDriveAbs(*, x: int, y: int, alpha: int):
             H1(u) * start_y + H2(u) * target_y + H3(u) * start_v_y + H4(u) * target_v_y
         )
     
-    approx_path_length = v_len / 2 * 0.9
-    path_duration_ms = approx_path_length / lin_speed * 1000
-    initial_ms = OSGetCount()
-    while True:
-        current_ms = OSGetCount() - initial_ms
-        current_u = current_ms / path_duration_ms
-        tracking_u = current_u + lookahead
-
-        tracking_x, tracking_y = spline(min(tracking_u, 1.0))
+    points: list[Point] = [Point(*spline(u / n_steps)) for u in range(n_steps + 1)]
+    for point in points[1:]:
+        tracking_x, tracking_y = point
         current_x, current_y, current_bearing_degs = VWGetPosition()
 
         offset_x = tracking_x - current_x
         offset_y = tracking_y - current_y
-        # print(tracking_u, math.sqrt(offset_x**2 + offset_y**2) / approx_path_length, end_threshold)
-        if tracking_u > 1.0 and math.sqrt(offset_x**2 + offset_y**2) / approx_path_length < end_threshold:
-            break
+        offset_distance = math.sqrt(offset_x**2 + offset_y**2)
 
         tracking_bearing_degs = math.atan2(offset_y, offset_x) * 180 / math.pi
         err_angle_degs = tracking_bearing_degs - current_bearing_degs
 
-        ang_speed = kp * err_angle_degs
-        VWSetSpeed(lin_speed=lin_speed, ang_speed=round(ang_speed))
+        VWTurn(round(err_angle_degs), ang_speed=ang_speed)
+        VWWait()
+        VWStraight(round(offset_distance), lin_speed=lin_speed)
+        VWWait()
 
-    VWStop()
-
-    VWTurn(round(target_bearing_degs - VWGetPosition().phi), ang_speed=90)
+    VWTurn(round(target_bearing_degs - VWGetPosition().phi), ang_speed=ang_speed)
+    VWWait()
 
 from eye import SIMSetRobot
 VWStop()
@@ -82,7 +74,8 @@ for i in range(len(points)):
     bearing_degs = bearing_rads / math.pi * 180
     points_and_bearings.append((points[i], bearing_degs))
 
-# (x, y), alpha = points_and_bearings[0]
-# SplineDriveAbs(x=x, y=y, alpha=alpha)
-for (x, y), alpha in points_and_bearings:
+i = 0
+while True:
+    (x, y), alpha = points_and_bearings[i % len(points_and_bearings)]
     SplineDriveAbs(x=x, y=y, alpha=alpha)
+    i += 1
