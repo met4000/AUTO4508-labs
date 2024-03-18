@@ -2,16 +2,16 @@ import math
 
 from eyepy import *
 
-def H1(u: float) -> float:
+def H1(u):
     return 2*(u**3) - 3*(u**2) + 1
 
-def H2(u: float) -> float:
+def H2(u):
     return -2*(u**3) + 3*(u**2)
 
-def H3(u: float) -> float:
+def H3(u):
    return u**3 - 2*(u**2) + u
 
-def H4(u: float) -> float:
+def H4(u):
     return u**3 - u**2
 
 def SplineDriveAbs(*, x: int, y: int, alpha: int):
@@ -64,22 +64,18 @@ def SplineDriveAbs(*, x: int, y: int, alpha: int):
     VWTurn(360 - err_angle_degs if err_angle_degs > 180 else err_angle_degs, ang_speed=ang_speed)
     VWWait()
 
+def SplineDrive(*, dx: int, dy: int, alpha: int):
+    VWSetPosition(x=0, y=0, phi=0)
+    SplineDriveAbs(x=dx, y=dy, alpha=alpha)
+
 from eye import SIMSetRobot
-VWStop()
-SIMSetRobot(0, 180, 180, 4, 0)
+SIMSetRobot(0, 225, 210, 4, 0)
 
-with open("way.txt") as file:
-    points: list[Point] = [Point(*map(int, point.strip().split(" "))) for point in file]
-    
-points_and_bearings: list[tuple[Point, int]] = []
-for i in range(len(points)):
-    bearing_vector = points[(i + 1) % len(points)] - points[i - 1]
-    bearing_rads = math.atan2(bearing_vector.y, bearing_vector.x)
-    bearing_degs = bearing_rads / math.pi * 180
-    points_and_bearings.append((points[i], bearing_degs))
+# SplineDrive(x=1000, y=1000, alpha=0)
+SplineDrive(dx=500, dy=1500, alpha=-145)
 
-i = 0
-while True:
-    (x, y), alpha = points_and_bearings[i % len(points_and_bearings)]
-    SplineDriveAbs(x=x, y=y, alpha=alpha)
-    i += 1
+# SplineDrive(x=1000, y=0, alpha=0)
+# SplineDrive(x=0, y=1000, alpha=90)
+# SplineDrive(x=0, y=1000, alpha=0)
+# SplineDrive(x=-500, y=-10, alpha=0)
+# SplineDrive(x=-500, y=200, alpha=-90)
