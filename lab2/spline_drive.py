@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from eyepy import *
 
 def H1(u):
