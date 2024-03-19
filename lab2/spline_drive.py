@@ -41,7 +41,7 @@ def SplineDriveAbs(*, x: int, y: int, alpha: int, print_colour: Colour = RED):
         inv_scaling_factor = 10
         transformed_point = ((1, 0), (0, -1)) @ point.as_vector() / inv_scaling_factor
         screen_point = Point(0, display_max_y - 1) + transformed_point
-        LCDPixel((screen_point / 10).round(), print_colour)
+        LCDPixel(screen_point.round(), print_colour)
     
     for point in points[1:]:
         tracking_pos = point
