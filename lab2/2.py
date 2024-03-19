@@ -24,7 +24,7 @@ colours: set[Colour] = {RED, GREEN, CYAN, YELLOW, PURPLE}
 
 i = 0
 while True:
-    colour: Colour = random.sample(colours.difference((last_colour,)), 1)[0]
+    colour: Colour = random.choice(tuple(colours.difference((last_colour,))))
     last_colour = colour
     
     (x, y), alpha = points_and_bearings[i % len(points_and_bearings)]
