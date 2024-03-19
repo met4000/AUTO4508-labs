@@ -1,4 +1,5 @@
 import math
+import random
 
 from eyepy import *
 
@@ -14,7 +15,7 @@ def H3(u: float) -> float:
 def H4(u: float) -> float:
     return u**3 - u**2
 
-def SplineDriveAbs(*, x: int, y: int, alpha: int):
+def SplineDriveAbs(*, x: int, y: int, alpha: int, print_colour: Colour = RED):
     lin_speed = 300
     ang_speed = 60
     n_steps = 20
@@ -34,13 +35,15 @@ def SplineDriveAbs(*, x: int, y: int, alpha: int):
     target_v_x = v_len * math.cos(target_bearing_rads)
     target_v_y = v_len * math.sin(target_bearing_rads)
 
-    def spline(u: float) -> tuple[float, float]:
-        return (
+    def spline(u: float) -> Point:
+        return Point(
             H1(u) * start_x + H2(u) * target_x + H3(u) * start_v_x + H4(u) * target_v_x,
             H1(u) * start_y + H2(u) * target_y + H3(u) * start_v_y + H4(u) * target_v_y
         )
     
-    points: list[Point] = [Point(*spline(u / n_steps)) for u in range(n_steps + 1)]
+    points: list[Point] = [spline(u / n_steps) for u in range(n_steps + 1)]
+    for point in points:
+        LCDPixel((point / 10).round(), colour)
     for point in points[1:]:
         tracking_x, tracking_y = point
         current_x, current_y, current_bearing_degs = VWGetPosition()
@@ -67,15 +70,21 @@ SIMSetRobot(0, 180, 180, 4, 0)
 with open("way.txt") as file:
     points: list[Point] = [Point(*map(int, point.strip().split(" "))) for point in file]
     
-points_and_bearings: list[tuple[Point, int]] = []
+points_and_bearings: list[tuple[tuple[int, int], int]] = []
 for i in range(len(points)):
     bearing_vector = points[(i + 1) % len(points)] - points[i - 1]
-    bearing_rads = math.atan2(bearing_vector.y, bearing_vector.x)
-    bearing_degs = bearing_rads / math.pi * 180
-    points_and_bearings.append((points[i], bearing_degs))
+    bearing_degs = rad_to_deg(bearing_vector.get_angle())
+    points_and_bearings.append((points[i].round(), round(bearing_degs)))
+
+# for printing splines to LCD
+last_colour: Colour = WHITE
+colours: set[Colour] = {RED, GREEN, CYAN, YELLOW, PURPLE}
 
 i = 0
 while True:
+    colour: Colour = random.sample(colours.difference((last_colour,)), 1)[0]
+    last_colour = colour
+    
     (x, y), alpha = points_and_bearings[i % len(points_and_bearings)]
-    SplineDriveAbs(x=x, y=y, alpha=alpha)
+    SplineDriveAbs(x=x, y=y, alpha=alpha, print_colour=colour)
     i += 1
