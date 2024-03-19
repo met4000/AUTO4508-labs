@@ -1,0 +1,21 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "cygwin_launch_python_file",
+      "type": "shell",
+      "command": "'/.../EyeSim/cygwin64/bin/bash.exe' --login -ic $'cygstart bash \\'-c \"cd /cygdrive/.../labs; PYTHONPATH=./lib python3 -m debugpy --listen localhost:5678 --wait-for-client ./${relativeFile}\"\\''",
+      "hide": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      }
+    }
+  ]
+}

@@ -10,7 +10,7 @@ from eye import SIMSetRobot
 VWStop()
 SIMSetRobot(0, 180, 180, 4, 0)
 
-with open("way.txt") as file:
+with open("./lab2/way.txt") as file:
     points: list[Point] = [Point(*map(int, point.strip().split(" "))) for point in file]
     
 points_and_bearings: list[tuple[tuple[int, int], int]] = []

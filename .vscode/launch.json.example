@@ -27,9 +27,10 @@
       "pathMappings": [
         {
           "localRoot": "${workspaceFolder}",
-          "remoteRoot": "/cygdrive/c/Users/.../labs"
+          "remoteRoot": "/cygdrive/.../labs"
         }
-      ]
+      ],
+      "preLaunchTask": "cygwin_launch_python_file"
     }
   ]
 }
