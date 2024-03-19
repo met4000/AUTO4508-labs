@@ -33,8 +33,16 @@ def SplineDriveAbs(*, x: int, y: int, alpha: int, print_colour: Colour = RED):
         return H1(u) * start_pos + H2(u) * target_pos + H3(u) * start_orientation + H4(u) * target_orientation
     
     points: list[Point] = [spline(u / n_steps) for u in range(n_steps + 1)]
+
+    _, display_max_y = LCDGetSize()
     for point in points:
-        LCDPixel((point / 10).round(), print_colour)
+        # convert (0,0) from being bottom left (in-world) to top left (screen)
+        # scale down to fit on the screen
+        inv_scaling_factor = 10
+        transformed_point = ((1, 0), (0, -1)) @ point.as_vector() / inv_scaling_factor
+        screen_point = Point(0, display_max_y - 1) + transformed_point
+        LCDPixel((screen_point / 10).round(), print_colour)
+    
     for point in points[1:]:
         tracking_pos = point
         current_pos, current_bearing_degs = VWGetPosition().as_float()
