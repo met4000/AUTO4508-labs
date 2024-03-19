@@ -41,6 +41,8 @@ def SplineDriveAbs(*, x: int, y: int, alpha: int):
         )
     
     points: list[Point] = [Point(*spline(u / n_steps)) for u in range(n_steps + 1)]
+    for point in points:
+        LCDPixel(point, WHITE)
     for point in points[1:]:
         tracking_x, tracking_y = point
         current_x, current_y, current_bearing_degs = VWGetPosition()
@@ -72,7 +74,7 @@ from eye import SIMSetRobot
 SIMSetRobot(0, 225, 210, 4, 0)
 
 # SplineDrive(x=1000, y=1000, alpha=0)
-SplineDrive(dx=500, dy=1500, alpha=-145)
+SplineDrive(dx=600, dy=1200, alpha=-130)
 
 # SplineDrive(x=1000, y=0, alpha=0)
 # SplineDrive(x=0, y=1000, alpha=90)

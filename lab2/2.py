@@ -52,16 +52,12 @@ def SplineDriveAbs(*, x: int, y: int, alpha: int):
         tracking_bearing_degs = math.atan2(offset_y, offset_x) * 180 / math.pi
         err_angle_degs = tracking_bearing_degs - current_bearing_degs
 
-        err_angle_degs = round(err_angle_degs) % 360
-        VWTurn(360 - err_angle_degs if err_angle_degs > 180 else err_angle_degs, ang_speed=ang_speed)
+        VWTurn(round(err_angle_degs), ang_speed=ang_speed)
         VWWait()
         VWStraight(round(offset_distance), lin_speed=lin_speed)
         VWWait()
 
-    err_angle_degs = target_bearing_degs - VWGetPosition().phi
-        
-    err_angle_degs = round(err_angle_degs) % 360
-    VWTurn(360 - err_angle_degs if err_angle_degs > 180 else err_angle_degs, ang_speed=ang_speed)
+    VWTurn(round(target_bearing_degs - VWGetPosition().phi), ang_speed=ang_speed)
     VWWait()
 
 from eye import SIMSetRobot
