@@ -1,5 +1,3 @@
-import math
-
 from eyepy import *
 
 def H1(u):
@@ -19,39 +17,30 @@ def SplineDriveAbs(*, x: int, y: int, alpha: int, print_colour: Colour = RED):
     ang_speed = 60
     n_steps = 20
 
-    start_x, start_y, start_bearing_degs = VWGetPosition()
-    target_x, target_y, target_bearing_degs = x, y, alpha
+    start_pos, start_bearing_degs = VWGetPosition().as_float()
+    target_pos, target_bearing_degs = Point(x, y), alpha
 
-    dx = target_x - start_x
-    dy = target_y - start_y
+    start_bearing_rads = deg_to_rad(start_bearing_degs)
+    target_bearing_rads = deg_to_rad(target_bearing_degs)
 
-    start_bearing_rads = start_bearing_degs / 180 * math.pi
-    target_bearing_rads = target_bearing_degs / 180 * math.pi
-
-    v_len = 2 * math.sqrt(dx**2 + dy**2)
-    start_v_x = v_len * math.cos(start_bearing_rads)
-    start_v_y = v_len * math.sin(start_bearing_rads)
-    target_v_x = v_len * math.cos(target_bearing_rads)
-    target_v_y = v_len * math.sin(target_bearing_rads)
+    v_len = 2 * abs(target_pos - start_pos)
+    start_orientation = Vector.from_angle(start_bearing_rads) * v_len
+    target_orientation = Vector.from_angle(target_bearing_rads) * v_len
 
     def spline(u: float) -> Point:
-        return Point(
-            H1(u) * start_x + H2(u) * target_x + H3(u) * start_v_x + H4(u) * target_v_x,
-            H1(u) * start_y + H2(u) * target_y + H3(u) * start_v_y + H4(u) * target_v_y
-        )
+        return H1(u) * start_pos + H2(u) * target_pos + H3(u) * start_orientation + H4(u) * target_orientation
     
     points: list[Point] = [spline(u / n_steps) for u in range(n_steps + 1)]
     for point in points:
         LCDPixel((point / 10).round(), print_colour)
     for point in points[1:]:
-        tracking_x, tracking_y = point
-        current_x, current_y, current_bearing_degs = VWGetPosition()
+        tracking_pos = point
+        current_pos, current_bearing_degs = VWGetPosition().as_float()
 
-        offset_x = tracking_x - current_x
-        offset_y = tracking_y - current_y
-        offset_distance = math.sqrt(offset_x**2 + offset_y**2)
+        offset = tracking_pos - current_pos
+        offset_distance = abs(offset)
 
-        tracking_bearing_degs = math.atan2(offset_y, offset_x) * 180 / math.pi
+        tracking_bearing_degs = rad_to_deg(offset.get_angle())
         err_angle_degs = tracking_bearing_degs - current_bearing_degs
 
         VWTurn(round(err_angle_degs), ang_speed=ang_speed)
@@ -63,5 +52,5 @@ def SplineDriveAbs(*, x: int, y: int, alpha: int, print_colour: Colour = RED):
     VWWait()
 
 def SplineDrive(*, dx: int, dy: int, alpha: int, print_colour: Colour = RED):
-    VWSetPosition(x=0, y=0, phi=0)
+    VWSetPosition((0, 0), 0)
     SplineDriveAbs(x=dx, y=dy, alpha=alpha, print_colour=print_colour)
