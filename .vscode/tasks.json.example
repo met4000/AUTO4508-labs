@@ -6,7 +6,7 @@
     {
       "label": "cygwin_launch_python_file",
       "type": "shell",
-      "command": "'/.../EyeSim/cygwin64/bin/bash.exe' --login -ic $'cygstart bash \\'-c \"cd /cygdrive/.../labs; PYTHONPATH=./lib python3 -m debugpy --listen localhost:5678 --wait-for-client ./${relativeFile}\"\\''",
+      "command": "'/.../EyeSim/cygwin64/bin/bash.exe' --login -ic $'cygstart bash \\'-c \"cd /cygdrive/.../labs/${relativeFileDirname}; PYTHONPATH=/cygdrive/.../labs/lib python3 -m debugpy --listen localhost:5678 --wait-for-client ./${fileBasename}\"\\''",
       "hide": true,
       "presentation": {
         "echo": true,
