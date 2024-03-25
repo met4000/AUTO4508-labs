@@ -26,7 +26,7 @@ def print_lidar(distances: list[int], *, colour_map: Optional[dict[int, Colour]]
         LCDLine(transform_point(point_root), transform_point(point_root + (0, distance / 20)), colour)
 
 
-def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, ang_speed: int = 60, end_threshold: int = 50) -> bool:
+def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, ang_speed: int = 60, end_threshold: int = 70) -> bool:
     """
     :param:`dx` mm
     :param:`dy` mm
@@ -34,6 +34,9 @@ def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, 
     start_pos, start_bearing = VWGetPosition().as_float()
     v = Vector(dx, dy)
     start_target_vector = Vector.from_polar(magnitude=abs(v), angle=start_bearing + v.get_angle())
+
+    # amount required to be clear to leave
+    step_size = hit_distance * 2
 
     target_pos = start_pos + start_target_vector
 
@@ -139,11 +142,13 @@ def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, 
                 min_target_dist = min(min_target_dist, target_dist)
 
                 if target_dist < end_threshold:
+                    VWStop()
                     return True
                 
                 hit_pos_dist = abs(hit_pos - current_pos)
                 if hit_pos_dist < end_threshold:
                     if moved_from_hit:
+                        VWStop()
                         return False
                 else:
                     moved_from_hit = True
@@ -159,8 +164,9 @@ def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, 
                     print_lidar_colour_map[i] = RED
                 
                 target_lidar_distance = min(target_lidar_distances)
-                if target_dist - target_lidar_distance <= min_target_dist - hit_distance * 2:
+                if target_dist - target_lidar_distance <= min_target_dist - step_size:
                     obstacle_driving = False
+                    VWStop()
                     break
 
 
@@ -178,10 +184,11 @@ def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, 
 
                 print_lidar(lidar_distances, colour_map=print_lidar_colour_map)
                 LCDLine(transform_point((0, 10 + hit_distance / 20)), transform_point((display_max_x, 10 + hit_distance / 20)), RED)
-                LCDLine(transform_point((0, 10 + hit_distance * 2 / 20)), transform_point((display_max_x, 10 + hit_distance * 2 / 20)), GREEN)
+                LCDLine(transform_point((0, 10 + step_size / 20)), transform_point((display_max_x, 10 + step_size / 20)), GREEN)
 
                 front_distance = min(front_distances)
                 if front_distance < hit_distance:
+                    VWStop()
                     break
                 front_error = 1 / (front_distance - hit_distance)
 
@@ -197,7 +204,6 @@ def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, 
                 last_error = error
 
                 VWSetSpeed(lin_speed=lin_speed, ang_speed=round(ang_speed * ang_speed_mult))
-            VWStop()
 
 VWStop()
 from eye import SIMSetRobot
