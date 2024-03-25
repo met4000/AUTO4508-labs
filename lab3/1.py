@@ -26,7 +26,7 @@ def print_lidar(distances: list[int], *, colour_map: Optional[dict[int, Colour]]
         LCDLine(transform_point(point_root), transform_point(point_root + (0, distance / 20)), colour)
 
 
-def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, ang_speed: int = 60, end_threshold: int = 70) -> bool:
+def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, ang_speed: int = 60, end_threshold: int = 50) -> bool:
     """
     :param:`dx` mm
     :param:`dy` mm
@@ -77,9 +77,13 @@ def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, 
             VWSetSpeed(lin_speed=lin_speed, ang_speed=round(ang_speed * ang_speed_mult))
         VWStop()
 
+
         # drive around obstacle
         LIDARSet(range=360, n_points=360)
         obstacle_driving = True
+        min_target_dist = math.inf
+        hit_pos, _ = VWGetPosition().as_float()
+        moved_from_hit = False
         while obstacle_driving:
             # turn perpendicular to the wall
 
@@ -130,6 +134,19 @@ def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, 
 
                 current_pos, current_bearing_deg = VWGetPosition().as_float()
                 pos_offset = target_pos - current_pos
+
+                target_dist = abs(pos_offset)
+                min_target_dist = min(min_target_dist, target_dist)
+
+                if target_dist < end_threshold:
+                    return True
+                
+                hit_pos_dist = abs(hit_pos - current_pos)
+                if hit_pos_dist < end_threshold:
+                    if moved_from_hit:
+                        return False
+                else:
+                    moved_from_hit = True
                 
                 target_bearing_rad = pos_offset.get_angle()
                 bearing_offset_deg = rad_to_deg(target_bearing_rad) - current_bearing_deg
@@ -142,7 +159,7 @@ def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, 
                     print_lidar_colour_map[i] = RED
                 
                 target_lidar_distance = min(target_lidar_distances)
-                if target_lidar_distance > hit_distance * 2:
+                if target_dist - target_lidar_distance <= min_target_dist - hit_distance * 2:
                     obstacle_driving = False
                     break
 
