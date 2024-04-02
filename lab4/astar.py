@@ -66,7 +66,7 @@ def make_heuristic_matrix(nodes: dict[int, Point], dst: int) -> list[float]:
 
     return heuristic_matrix
 
-def astar_path(*, distance_matrix: list[list[float]], heuristic_matrix: list[float], src: int, dst: int) -> tuple[Literal[True], list[int], float] | tuple[Literal[False], None, float]:
+def astar_path(*, distance_matrix: list[list[float]], heuristic_matrix: list[float], src: int, dst: int) -> tuple[bool, list[int], float]:
     """returns reachable, path, and path length"""
 
     queue: PriorityQueue[tuple[float, list[int]]] = PriorityQueue()
@@ -107,9 +107,11 @@ def astar_path(*, distance_matrix: list[list[float]], heuristic_matrix: list[flo
             new_weight = current_path_length + next_node_distance + next_node_heuristic
             queue.put((new_weight, path + [next_node]))
     
-    return False, None, math.inf
+    return False, [], math.inf
 
-def path_from_file(file_path: str, *, src: Optional[int] = None, dst: Optional[int] = None) -> tuple[Literal[True], list[int], float] | tuple[Literal[False], None, float]:
+def path_from_file(file_path: str, *, src: Optional[int] = None, dst: Optional[int] = None) -> tuple[bool, list[int], float, dict[int, Point]]:
+    """defaults to first node is src, and last node is dst"""
+    
     nodes, edges = graph_from_file(file_path)
 
     src = 0 if src is None else src
@@ -118,4 +120,5 @@ def path_from_file(file_path: str, *, src: Optional[int] = None, dst: Optional[i
     distance_matrix = make_distance_matrix(nodes, edges)
     heuristic_matrix = make_heuristic_matrix(nodes, dst)
 
-    return astar_path(distance_matrix=distance_matrix, heuristic_matrix=heuristic_matrix, src=src, dst=dst)
+    reachable, path, distance = astar_path(distance_matrix=distance_matrix, heuristic_matrix=heuristic_matrix, src=src, dst=dst)
+    return reachable, path, distance, nodes

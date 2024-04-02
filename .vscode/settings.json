@@ -23,6 +23,7 @@
   ],
   "python.analysis.extraPaths": [
     "${workspaceFolder}/lib",
+    "${workspaceFolder}/lab3",
   ],
   "editor.suggest.snippetsPreventQuickSuggestions": true
 }

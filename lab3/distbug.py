@@ -25,20 +25,14 @@ def print_lidar(distances: list[int], *, colour_map: Optional[dict[int, Colour]]
 
         LCDLine(transform_point(point_root), transform_point(point_root + (0, distance / 20)), colour)
 
-
-def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, ang_speed: int = 60, end_threshold: int = 70) -> bool:
+def distbug_abs(target_pos: Point, *, hit_distance: int = 140, lin_speed: int = 300, ang_speed: int = 60, end_threshold: int = 70) -> bool:
     """
-    :param:`dx` mm
-    :param:`dy` mm
+    :param:`x` mm
+    :param:`y` mm
     """
-    start_pos, start_bearing = VWGetPosition().as_float()
-    v = Vector(dx, dy)
-    start_target_vector = Vector.from_polar(magnitude=abs(v), angle=start_bearing + v.get_angle())
 
     # amount required to be clear to leave
     step_size = hit_distance * 2
-
-    target_pos = start_pos + start_target_vector
 
     while True:
         # turn to target
@@ -204,3 +198,15 @@ def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, 
                 last_error = error
 
                 VWSetSpeed(lin_speed=lin_speed, ang_speed=round(ang_speed * ang_speed_mult))
+
+def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, ang_speed: int = 60, end_threshold: int = 70) -> bool:
+    """
+    :param:`dx` mm
+    :param:`dy` mm
+    """
+    start_pos, start_bearing = VWGetPosition().as_float()
+    v = Vector(dx, dy)
+    start_target_vector = Vector.from_polar(magnitude=abs(v), angle=start_bearing + v.get_angle())
+
+    target_pos = start_pos + start_target_vector
+    return distbug_abs(target_pos, hit_distance=hit_distance, lin_speed=lin_speed, ang_speed=ang_speed, end_threshold=end_threshold)
