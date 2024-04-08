@@ -1,3 +1,4 @@
+from __future__ import annotations
 from eyepy import *
 
 display_max_x, display_max_y = LCDGetSize()
