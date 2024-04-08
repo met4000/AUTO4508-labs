@@ -26,7 +26,7 @@ def print_lidar(distances: list[int], *, colour_map: Optional[dict[int, Colour]]
 
         LCDLine(transform_point(point_root), transform_point(point_root + (0, distance / 20)), colour)
 
-def distbug_abs(target_pos: Point, *, hit_distance: int = 140, lin_speed: int = 300, ang_speed: int = 60, end_threshold: int = 70) -> bool:
+def distbug_abs(target_pos: Point, *, hit_distance: int = 140, lin_speed: int = 300, ang_speed: int = 60, end_threshold: int = 70, lcd_print: bool = True) -> bool:
     """
     :param:`x` mm
     :param:`y` mm
@@ -61,8 +61,9 @@ def distbug_abs(target_pos: Point, *, hit_distance: int = 140, lin_speed: int = 
                 return True
 
             lidar_distances = LIDARGet()
-            print_lidar(lidar_distances)
-            LCDLine(transform_point((0, 10 + hit_distance / 20)), transform_point((display_max_x, 10 + hit_distance / 20)), RED)
+            if lcd_print:
+                print_lidar(lidar_distances)
+                LCDLine(transform_point((0, 10 + hit_distance / 20)), transform_point((display_max_x, 10 + hit_distance / 20)), RED)
             if not all(distance > hit_distance for distance in lidar_distances):
                 break
             
@@ -96,8 +97,9 @@ def distbug_abs(target_pos: Point, *, hit_distance: int = 140, lin_speed: int = 
             for i in window_indices:
                 print_lidar_colour_map[i] = YELLOW
 
-            print_lidar(lidar_distances, colour_map=print_lidar_colour_map)
-            LCDLine(transform_point((0, 10 + hit_distance / 20)), transform_point((display_max_x, 10 + hit_distance / 20)), RED)
+            if lcd_print:
+                print_lidar(lidar_distances, colour_map=print_lidar_colour_map)
+                LCDLine(transform_point((0, 10 + hit_distance / 20)), transform_point((display_max_x, 10 + hit_distance / 20)), RED)
 
             VWTurn(90 - (min_window_index - len(lidar_distances) // 2), ang_speed=ang_speed)
 
@@ -113,8 +115,9 @@ def distbug_abs(target_pos: Point, *, hit_distance: int = 140, lin_speed: int = 
                 for i in window_indices:
                     print_lidar_colour_map[i] = YELLOW
 
-                print_lidar(lidar_distances, colour_map=print_lidar_colour_map)
-                LCDLine(transform_point((0, 10 + hit_distance / 20)), transform_point((display_max_x, 10 + hit_distance / 20)), RED)
+                if lcd_print:
+                    print_lidar(lidar_distances, colour_map=print_lidar_colour_map)
+                    LCDLine(transform_point((0, 10 + hit_distance / 20)), transform_point((display_max_x, 10 + hit_distance / 20)), RED)
 
             # wall following
 
