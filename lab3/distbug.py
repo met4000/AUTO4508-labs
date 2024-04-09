@@ -2,7 +2,7 @@ from __future__ import annotations
 from eyepy import *
 
 display_max_x, display_max_y = LCDGetSize()
-def transform_point(p: Point | tuple[float, float]) -> IntPoint:
+def transform_point(p: PointLike) -> IntPoint:
     p = Point(*p)
     transformed_point = ((1, 0), (0, -1)) @ p.as_vector()
     screen_point = Point(0, display_max_y - 1) + transformed_point

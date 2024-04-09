@@ -32,7 +32,7 @@ print("Path Length:", distance)
 
 # print graph and path
 
-LCD_NODE_RADIUS = 8
+LCD_NODE_SIZE = 8
 LCD_NODE_COLOUR = WHITE
 LCD_LINE_COLOUR = WHITE
 
@@ -40,32 +40,18 @@ LCD_SRC_NODE_COLOUR = YELLOW
 LCD_DST_NODE_COLOUR = GREEN
 LCD_PATH_COLOUR = GREEN
 
-LCD_INV_SCALING = 10
-
-_, display_max_y = LCDGetSize()
-def transform_point(p: Point) -> IntPoint:
-    transformed_point = ((1, 0), (0, -1)) @ (p / LCD_INV_SCALING).as_vector()
-    screen_point = Point(0, display_max_y - 1) + transformed_point
-    return screen_point.round()
+LCDSetPointMap(lcd_default_world_coord_map)
 
 # edges
 for src, dst_list in edges.items():
     for dst in dst_list:
-        LCDLine(
-            transform_point(nodes[src]),
-            transform_point(nodes[dst]),
-            LCD_LINE_COLOUR
-        )
+        LCDLine(nodes[src], nodes[dst], LCD_LINE_COLOUR)
 
 # path
 for i in range(1, len(path)):
     src = path[i - 1]
     dst = path[i]
-    LCDLine(
-        transform_point(nodes[src]),
-        transform_point(nodes[dst]),
-        LCD_PATH_COLOUR
-    )
+    LCDLine(nodes[src], nodes[dst], LCD_PATH_COLOUR)
 
 # nodes
 for node_id, node_pos in nodes.items():
@@ -75,7 +61,7 @@ for node_id, node_pos in nodes.items():
     elif node_id == path_dst:
         col = LCD_DST_NODE_COLOUR
     
-    LCDCircle(transform_point(node_pos), LCD_NODE_RADIUS, col)
+    LCDCircle(node_pos, LCD_NODE_SIZE, col)
 
 
 padding = Vector(100, 100)
