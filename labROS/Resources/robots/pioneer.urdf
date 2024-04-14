@@ -156,7 +156,7 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="-1.57079635 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="../meshes/p3at_meshes/wheel.dae"/>
         <cylinder length="0.075" radius="0.111"/>
@@ -257,7 +257,7 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="-1.57079635 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="../meshes/p3at_meshes/wheel.dae"/>
         <cylinder length="0.075" radius="0.111"/>
@@ -270,7 +270,7 @@
   <joint name="p3at_front_right_wheel_joint" type="continuous">
     <axis xyz="0 1 0"/>
     <anchor xyz="0 0 0"/>
-    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <origin rpy="0 0 3.14159" xyz="0 0 0"/>
     <parent link="p3at_front_right_hub"/>
     <child link="p3at_front_right_wheel"/>
     <limit effort="100" velocity="100"/>
@@ -356,7 +356,7 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="-1.57079635 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="../meshes/p3at_meshes/wheel.dae"/>
         <cylinder length="0.075" radius="0.111"/>
@@ -455,7 +455,7 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="-1.57079635 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="../meshes/p3at_meshes/wheel.dae"/>
         <cylinder length="0.075" radius="0.111"/>
@@ -468,7 +468,7 @@
   <joint name="p3at_back_right_wheel_joint" type="continuous">
     <axis xyz="0 1 0"/>
     <anchor xyz="0 0 0"/>
-    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <origin rpy="0 0 3.14159" xyz="0 0 0"/>
     <parent link="p3at_back_right_hub"/>
     <child link="p3at_back_right_wheel"/>
     <limit effort="100" velocity="100"/>
