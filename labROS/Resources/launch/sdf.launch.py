@@ -25,7 +25,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
-    pkg_ros_gz_sim_demos = get_package_share_directory('p3at')
+    pkg_ros_gz_sim_demos = get_package_share_directory('roslab')
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
 
     sdf_file = os.path.join(pkg_ros_gz_sim_demos, 'worlds', 'basic_urdf.sdf')
