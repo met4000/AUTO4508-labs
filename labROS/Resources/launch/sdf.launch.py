@@ -113,6 +113,15 @@ def generate_launch_description():
         executable="rqt_robot_steering",
     )
 
+    slam_toolbox = Node( 
+        package='slam_toolbox', 
+        executable='async_slam_toolbox_node', 
+        parameters=[
+            get_package_share_directory('roslab') + '/config/mapping.yaml'
+        ], 
+        output='screen',
+    )
+
     return LaunchDescription([
         rviz_launch_arg,
         gazebo,
@@ -121,5 +130,6 @@ def generate_launch_description():
         robot_state_publisher,
         joint_state_pub,
         rviz,
-        robot_steering
+        robot_steering,
+        slam_toolbox
     ])
