@@ -12,6 +12,7 @@
     "distbug",
     "eyepy",
     "eyesim's",
+    "infp",
     "libeyesim",
     "lidar",
     "LIGHTGRAY",
@@ -19,7 +20,13 @@
     "MOTORPID",
     "mult",
     "NOKEY",
+    "odometry",
     "QQVGA",
+    "remappings",
+    "rosgraph",
+    "roslab",
+    "rviz",
+    "urdf",
     "usleep"
   ],
   "python.analysis.extraPaths": [

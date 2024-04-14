@@ -14,6 +14,7 @@
 
 import os
 
+from ament_index_python import get_package_prefix
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess
@@ -21,7 +22,6 @@ from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
-
 
 def generate_launch_description():
 
@@ -80,7 +80,26 @@ def generate_launch_description():
     robot = ExecuteProcess(
         cmd=["ros2", "run", "ros_gz_sim", "create", "-topic", "robot_description", "-z", "0.2"],
         name="spawn robot",
-        output="both"
+        output="both",
+    )
+
+    bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '/lidar@sensor_msgs/msg/LaserScan@ignition.msgs.LaserScan',
+            '/imu@sensor_msgs/msg/Imu@ignition.msgs.IMU',
+            '/model/pioneer3at_body/odometry@nav_msgs/msg/Odometry@ignition.msgs.Odometry',
+            '/cmd_vel@geometry_msgs/msg/Twist@ignition.msgs.Twist',
+            '/camera@sensor_msgs/msg/Image@ignition.msgs.Image',
+            '/model/pioneer3at_body/tf@tf2_msgs/msg/TFMessage@ignition.msgs.Pose_V',
+            '/clock@rosgraph_msgs/msg/Clock@ignition.msgs.Clock',
+        ],
+        output='screen',
+        remappings=[('/cmd_vel','/cmd_vel'),
+            ('/model/pioneer3at_body/odometry','/odom'),
+            ('/model/pioneer3at_body/tf','/tf')
+        ]
     )
 
     joint_state_pub = Node(
@@ -97,6 +116,7 @@ def generate_launch_description():
     return LaunchDescription([
         rviz_launch_arg,
         gazebo,
+        bridge,
         robot,
         robot_state_publisher,
         joint_state_pub,
