@@ -96,7 +96,8 @@ def generate_launch_description():
             '/clock@rosgraph_msgs/msg/Clock@ignition.msgs.Clock',
         ],
         output='screen',
-        remappings=[('/cmd_vel','/cmd_vel'),
+        remappings=[
+            ('/cmd_vel','/cmd_vel'),
             ('/model/pioneer3at_body/odometry','/odom'),
             ('/model/pioneer3at_body/tf','/tf')
         ]
