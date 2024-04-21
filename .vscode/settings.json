@@ -22,6 +22,7 @@
     "NOKEY",
     "odometry",
     "QQVGA",
+    "quadtree",
     "remappings",
     "rosgraph",
     "roslab",
@@ -32,6 +33,8 @@
   "python.analysis.extraPaths": [
     "${workspaceFolder}/lib",
     "${workspaceFolder}/lab3",
+    "${workspaceFolder}/lab4",
+    "${workspaceFolder}/lab5",
   ],
   "editor.suggest.snippetsPreventQuickSuggestions": true
 }

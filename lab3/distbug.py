@@ -203,7 +203,7 @@ def distbug_abs(target_pos: Point, *, hit_distance: int = 140, lin_speed: int = 
 
                 VWSetSpeed(lin_speed=lin_speed, ang_speed=round(ang_speed * ang_speed_mult))
 
-def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, ang_speed: int = 60, end_threshold: int = 70) -> bool:
+def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, ang_speed: int = 60, end_threshold: int = 70, lcd_print: bool = True) -> bool:
     """
     :param:`dx` mm
     :param:`dy` mm
@@ -213,4 +213,4 @@ def distbug(dx: int, dy: int, *, hit_distance: int = 140, lin_speed: int = 300, 
     start_target_vector = Vector.from_polar(magnitude=abs(v), angle=start_bearing + v.get_angle())
 
     target_pos = start_pos + start_target_vector
-    return distbug_abs(target_pos, hit_distance=hit_distance, lin_speed=lin_speed, ang_speed=ang_speed, end_threshold=end_threshold)
+    return distbug_abs(target_pos, hit_distance=hit_distance, lin_speed=lin_speed, ang_speed=ang_speed, end_threshold=end_threshold, lcd_print=lcd_print)
