@@ -68,10 +68,10 @@ class QuadtreeOutput(NamedTuple):
         return self
 
 
-def quadtree(image: Image) -> QuadtreeOutput:
-    return _quadtree_inner(image, Region(IntPoint(0, 0), IntPoint(image.resolution.WIDTH - 1, image.resolution.HEIGHT - 1)))
+def quadtree(image: Image, *, min_size: float = 0) -> QuadtreeOutput:
+    return _quadtree_inner(image, Region(IntPoint(0, 0), IntPoint(image.resolution.WIDTH - 1, image.resolution.HEIGHT - 1)), min_size=min_size)
 
-def _quadtree_inner(image: Image, region: Region) -> QuadtreeOutput:
+def _quadtree_inner(image: Image, region: Region, min_size: float = 0) -> QuadtreeOutput:
     # check region is valid
     if region.p1.x > region.p2.x or region.p1.y > region.p2.y:
         return QuadtreeOutput([], [])
@@ -87,6 +87,9 @@ def _quadtree_inner(image: Image, region: Region) -> QuadtreeOutput:
             return QuadtreeOutput([], [region])
         else:
             raise Exception(f"unexpected pixel value '{pixel}'")
+    
+    if abs(Point(*region.p1) - Point(*region.p2)) < min_size:
+        return QuadtreeOutput([], [region])
 
     # assumption that will be updated and correct after completing the grid search
     all_free = True
@@ -139,7 +142,7 @@ def interval_intersection(i1: tuple[int, int], i2: tuple[int, int]) -> bool:
 
     return i1[0] <= i2[1] and i2[0] <= i1[1]
 
-def find_valid_edges(regions: QuadtreeOutput) -> dict[int, set[int]]:
+def find_valid_edges(regions: QuadtreeOutput, *, buffer: int = 0) -> dict[int, set[int]]:
     """finds all possible (undirected) edges with no collisions for the given regions"""
     edges: dict[int, set[int]] = { src: set() for src, _ in enumerate(regions.vacant)}
 
@@ -150,17 +153,17 @@ def find_valid_edges(regions: QuadtreeOutput) -> dict[int, set[int]]:
 
             for region in regions.occupied:
                 # check if line segment intersects region
-                
-                # segment on one side => no intersection
-                if (max(src_centre.x, dst_centre.x) < region.p1.x # left
-                 or min(src_centre.x, dst_centre.x) > region.p2.x # right
-                 or max(src_centre.y, dst_centre.y) < region.p1.y # top
-                 or min(src_centre.y, dst_centre.y) > region.p2.y # bottom
-                ): continue
 
-                # now: overlap in projections onto axis => intersection
-                if (interval_intersection((src_centre.x, dst_centre.x), (region.p1.x, region.p2.x))
-                 or interval_intersection((src_centre.y, dst_centre.y), (region.p1.y, region.p2.y))
+                # segment on one side => no intersection
+                if (max(src_centre.x, dst_centre.x) < region.p1.x - buffer # left
+                 or min(src_centre.x, dst_centre.x) > region.p2.x + buffer # right
+                 or max(src_centre.y, dst_centre.y) < region.p1.y - buffer # top
+                 or min(src_centre.y, dst_centre.y) > region.p2.y + buffer # bottom
+                ): continue
+                
+                # overlap in projections onto axis => intersection
+                if (interval_intersection((src_centre.x, dst_centre.x), (region.p1.x - buffer, region.p2.x + buffer))
+                 and interval_intersection((src_centre.y, dst_centre.y), (region.p1.y - buffer, region.p2.y + buffer))
                 ): break
             else:
                 # no intersection: valid edge

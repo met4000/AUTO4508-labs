@@ -9,38 +9,30 @@ from astar import astar_path, make_distance_matrix, make_heuristic_matrix
 from distbug import distbug_abs
 from quadtree import Region, closest_region_to_point, find_valid_edges, quadtree, read_p1
 
-FILENAME = "./corner.pbm"
+FILENAME = "./diagonal.pbm"
 MAP_SCALING = 31 # scaling factor from image to world
+LCD_SCALING = 2.5
 
 PADDING_ITERATIONS = 5
 
 VACANT_COL = GREEN
 OCCUPIED_COL = RED
-EDGE_COL = WHITE
+EDGE_COL = GRAY
 
 SRC_COL = CYAN
-DST_COL = BLUE
-PATH_COL = BLUE
+DST_COL = WHITE
+PATH_COL = WHITE
 PATH_NEXT_COL = CYAN
+
+REGION_MIN_SIZE = 4
+EDGE_BUFFER = 4
 
 start_pos_padding = Vector(0, 0)
 
-raw_image = read_p1(FILENAME)
+image = read_p1(FILENAME)
+regions = quadtree(image, min_size=REGION_MIN_SIZE)
 
-# image processing to pad obstacles
-
-dilation_border_value = 1
-def dilation(p: IntPoint, get_or_default: Callable[[IntPointLike, float], float]) -> int:
-    for offset in itertools.product(*((range(-1, 1+1),) * 2)):
-        if get_or_default((Point(*p) + cast(tuple[int, int], offset)).round(), dilation_border_value) > 0:
-            return 1
-    return 0
-
-padded_image = raw_image
-for _ in range(PADDING_ITERATIONS):
-    padded_image = padded_image.apply_local_op(dilation)
-
-regions = quadtree(padded_image)
+LCDSetPointMap(lambda p: (p * LCD_SCALING).round())
 
 def print_region_bounds(region: Region, col: Colour):
     LCDLine(region.p1, (region.p2.x, region.p1.y), col) # top
@@ -60,7 +52,7 @@ map_nodes = { node: region.get_centre() for node, region in enumerate(regions.va
 # print("Map node coords:")
 # print(map_nodes)
 
-edges = find_valid_edges(regions)
+edges = find_valid_edges(regions, buffer=EDGE_BUFFER)
 # print("Edges:")
 # print(edges)
 
@@ -77,11 +69,11 @@ for src, dst_set in edges.items():
 
 image_coord_segment = (
     (-1, -1),
-    (padded_image.resolution.WIDTH, padded_image.resolution.HEIGHT)
+    (image.resolution.WIDTH, image.resolution.HEIGHT)
 )
 world_coord_segment = (
-    Point(0, padded_image.resolution.HEIGHT) * MAP_SCALING,
-    Point(padded_image.resolution.WIDTH, 0) * MAP_SCALING
+    Point(0, image.resolution.HEIGHT) * MAP_SCALING,
+    Point(image.resolution.WIDTH, 0) * MAP_SCALING
 )
 
 point_map = make_coord_map(image_coord_segment, world_coord_segment)
@@ -90,7 +82,7 @@ nodes = { node: point_map(Point(*pos)) for node, pos in map_nodes.items() }
 # compute path
 
 src = closest_region_to_point(regions.vacant, (0, 0))
-dst = closest_region_to_point(regions.vacant, (padded_image.resolution.WIDTH - 1, padded_image.resolution.HEIGHT - 1))
+dst = closest_region_to_point(regions.vacant, (image.resolution.WIDTH - 1, image.resolution.HEIGHT - 1))
 
 distance_matrix = make_distance_matrix(nodes, edges)
 heuristic_matrix = make_heuristic_matrix(nodes, dst)
@@ -110,7 +102,7 @@ print("Path Length:", distance)
 # print path to lcd
 
 inv_point_map = make_coord_map(world_coord_segment, image_coord_segment)
-LCDSetPointMap(lambda p: inv_point_map(p).round())
+LCDSetPointMap(lambda p: (inv_point_map(p) * LCD_SCALING).round())
 
 for i in range(1, len(path)):
     src = path[i - 1]
