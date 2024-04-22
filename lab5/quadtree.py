@@ -8,15 +8,28 @@ def read_p1(filename: str) -> Image:
             raise ValueError(f"expected magic number of '{filename}' to be 'P1': found '{magicNumber}'")
 
         def read_next() -> str:
-            char = file.read(1)
-            while char.isspace():
+            char: str
+            while True:
                 char = file.read(1)
+                if char == "": break
+                if char.isspace(): continue
+                if char == "#":
+                    while char != "\n":
+                        char = file.read(1)
+                break
             
             chars = char
-            char = file.read(1)
-            while not char.isspace():
-                chars += char
+            while True:
                 char = file.read(1)
+                if char == "": break
+                if char.isspace(): break
+
+                if char == "#":
+                    while char != "\n":
+                        char = file.read(1)
+                    continue
+                
+                chars += char
 
             return chars
 
