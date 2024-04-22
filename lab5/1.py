@@ -25,3 +25,5 @@ for region in occupied:
 print(f"Vacant Centres ({len(vacant)}):")
 for region in vacant:
     print(region.get_centre())
+
+input()

@@ -9,7 +9,7 @@ from astar import astar_path, make_distance_matrix, make_heuristic_matrix
 from distbug import distbug_abs
 from quadtree import Region, closest_region_to_point, find_valid_edges, quadtree, read_p1
 
-FILENAME = "./obstacle_4k.pbm"
+FILENAME = "./blocks.pbm"
 MAP_SCALING = 31 # scaling factor from image to world
 LCD_SCALING = 2.5
 
@@ -81,8 +81,8 @@ nodes = { node: point_map(Point(*pos)) for node, pos in map_nodes.items() }
 
 # compute path
 
-src = closest_region_to_point(regions.vacant, (0, 0))
-dst = closest_region_to_point(regions.vacant, (image.resolution.WIDTH - 1, image.resolution.HEIGHT - 1))
+src = closest_region_to_point(regions.vacant, (0, image.resolution.HEIGHT / 2))
+dst = closest_region_to_point(regions.vacant, (image.resolution.WIDTH / 2, image.resolution.HEIGHT - 1))
 
 distance_matrix = make_distance_matrix(nodes, edges)
 heuristic_matrix = make_heuristic_matrix(nodes, dst)

@@ -11,3 +11,5 @@ print(nodes)
 
 edges = find_valid_edges(regions)
 print(edges)
+
+input()

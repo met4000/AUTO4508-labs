@@ -1,7 +1,7 @@
 from eyepy import *
 from quadtree import Region, find_valid_edges, quadtree, read_p1
 
-FILENAME = "./corner.pbm"
+FILENAME = "./blocks.pbm"
 VACANT_COL = GREEN
 OCCUPIED_COL = RED
 EDGE_COL = WHITE
@@ -36,3 +36,5 @@ for src, dst_set in edges.items():
             continue
         
         LCDLine(nodes[src], nodes[dst], EDGE_COL)
+
+input()
