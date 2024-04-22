@@ -9,7 +9,7 @@ from astar import astar_path, make_distance_matrix, make_heuristic_matrix
 from distbug import distbug_abs
 from quadtree import Region, closest_region_to_point, find_valid_edges, quadtree, read_p1
 
-FILENAME = "./diagonal.pbm"
+FILENAME = "./obstacle_4k.pbm"
 MAP_SCALING = 31 # scaling factor from image to world
 LCD_SCALING = 2.5
 
