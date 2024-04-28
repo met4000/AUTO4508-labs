@@ -15,7 +15,10 @@ def occupied(image: Image, p: IntPointLike, *, default: bool = False) -> bool:
 def brushfire(image: Image, *, print: bool = False, free_colour: Colour = WHITE, point_colour: Colour = BLACK, lcd_scaling: float = 1) -> set[IntPoint]:
     def printPixelArea(p: PointLike, col: Colour):
         p = Point(*p)
-        LCDArea(p, p + Point(1, 1) * (lcd_scaling - 1), col)
+        if lcd_scaling - 1 > 0:
+            LCDArea(p, p + Point(1, 1) * (lcd_scaling - 1), col)
+        else:
+            LCDPixel(p, col)
 
     # pixel to col id
     pixel_col: dict[IntPoint, int] = {}

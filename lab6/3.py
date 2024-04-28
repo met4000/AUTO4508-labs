@@ -16,7 +16,7 @@ from quadtree import read_p1
 FILENAME = "./u.pbm"
 
 MAP_SCALING = 31 # scaling factor from image to world
-LCD_SCALING = 2.5
+LCD_SCALING = 2
 
 PRINT = True
 FREE_COLOUR = WHITE
