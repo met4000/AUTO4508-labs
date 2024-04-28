@@ -30,13 +30,15 @@
     "roslab",
     "rviz",
     "urdf",
-    "usleep"
+    "usleep",
+    "Voronoi"
   ],
   "python.analysis.extraPaths": [
     "${workspaceFolder}/lib",
     "${workspaceFolder}/lab3",
     "${workspaceFolder}/lab4",
     "${workspaceFolder}/lab5",
+    "${workspaceFolder}/lab6",
   ],
   "editor.suggest.snippetsPreventQuickSuggestions": true
 }
