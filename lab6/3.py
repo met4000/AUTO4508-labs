@@ -88,4 +88,4 @@ VWSetPosition(src_pos.round(), 0)
 for prev_node_index, next_node in enumerate(path[1:]):
     next_pos = nodes[next_node]
     LCDLine(nodes[path[prev_node_index]], next_pos, PATH_NEXT_COL)
-    distbug_abs(next_pos, hit_distance=100, lin_speed=170, end_threshold=20, lcd_print=False)
+    distbug_abs(next_pos, hit_distance=20, lin_speed=170, end_threshold=12, lcd_print=False)
