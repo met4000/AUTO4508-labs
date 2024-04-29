@@ -3,3 +3,5 @@
 .vscode/tasks.json
 
 lab*.zip
+
+*.prof
