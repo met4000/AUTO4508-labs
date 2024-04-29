@@ -1,5 +1,3 @@
-from eyepy import *
-
 from bezier import *
 
 bezier = quad_bezier((100, 150), (250, 50), (400, 250))
