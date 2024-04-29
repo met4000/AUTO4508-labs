@@ -3,21 +3,25 @@ import math
 from typing import Callable
 
 
-Bezier = Callable[[float], tuple[float, float]]
+class Bezier:
+    f: Callable[[float], tuple[float, float]]
 
-def quad_bezier(p0: tuple[float, float], p1: tuple[float, float], p2: tuple[float, float]) -> Bezier:
-    def f(t: float) -> tuple[float, float]:
-        t_prime = 1 - t
-        x = t_prime**2 * p0[0] + 2 * t_prime * t * p1[0] + t**2 * p2[0]
-        y = t_prime**2 * p0[1] + 2 * t_prime * t * p1[1] + t**2 * p2[1]
-        return (x, y)
-    
-    return f
+    def __init__(self, p0: tuple[float, float], p1: tuple[float, float], p2: tuple[float, float]):
+        self.p0 = p0
+        self.p1 = p1
+        self.p2 = p2
+
+        def f(t: float) -> tuple[float, float]:
+            t_prime = 1 - t
+            x = t_prime**2 * p0[0] + 2 * t_prime * t * p1[0] + t**2 * p2[0]
+            y = t_prime**2 * p0[1] + 2 * t_prime * t * p1[1] + t**2 * p2[1]
+            return (x, y)
+        self.f = f
 
 def approx_bezier_length(bezier: Bezier) -> float:
-    p_start_x, p_start_y = bezier(0)
-    p_mid_x, p_mid_y = bezier(0.5)
-    p_end_x, p_end_y = bezier(1)
+    p_start_x, p_start_y = bezier.p0
+    p_mid_x, p_mid_y = bezier.p1
+    p_end_x, p_end_y = bezier.p2
 
     section_1 = math.sqrt((p_mid_x - p_start_x)**2 + (p_mid_y - p_start_y)**2)
     section_2 = math.sqrt((p_end_x - p_mid_x)**2 + (p_end_y - p_mid_y)**2)
@@ -26,14 +30,14 @@ def approx_bezier_length(bezier: Bezier) -> float:
 
 def bezier_points(bezier: Bezier, n_points: int) -> list[tuple[float, float]]:
     t_values = [i / n_points for i in range(n_points + 1)]
-    return [bezier(t) for t in t_values]
+    return [bezier.f(t) for t in t_values]
 
 def nearest_pixel(p: tuple[float, float]) -> tuple[int, int]:
     return (round(p[0]), round(p[1]))
 
 def bezier_pixels(bezier: Bezier) -> list[tuple[int, int]]:
     approx_length = approx_bezier_length(bezier)
-    points: list[tuple[float, float]] = bezier_points(bezier, math.ceil(approx_length * 3))
+    points: list[tuple[float, float]] = bezier_points(bezier, math.ceil(approx_length * 2.5))
 
     pixels: list[tuple[int, int]] = []
     pixels.append(nearest_pixel(points[0]))
@@ -66,9 +70,7 @@ def _compute_initial(start: tuple[int, int], *, radius: float, epsilon: float) -
             continue
 
         for offset in offsets:
-            offset_centre_x = start[0] + offset[0]
-            offset_centre_y = start[1] + offset[1]
-            if math.sqrt((offset_centre_x - test_p_x)**2 + (offset_centre_y - test_p_y)**2) < radius_prime:
+            if math.sqrt((offset[0] - dx)**2 + (offset[1] - dy)**2) < radius_prime:
                 offset_pixels[offset].add((dx - offset[0], dy - offset[1]))
     
     return pixels, offset_pixels
