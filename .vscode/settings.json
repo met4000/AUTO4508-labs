@@ -24,6 +24,7 @@
     "mult",
     "NOKEY",
     "odometry",
+    "pyperf",
     "QQVGA",
     "quadtree",
     "remappings",
