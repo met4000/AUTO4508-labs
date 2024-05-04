@@ -2,7 +2,7 @@
 
 # * modified version of the maze.py maze example program from eyesimX
 
-from eye import * # type: ignore
+from eyepy import *
 
 DIST = 360
 SPEED = 180
@@ -144,7 +144,7 @@ def unmarked(y: int, x: int, dir) -> int:
 
 '''* go_to.
   walk one square in current direction '''
-def go_to(dir):
+def go_to(dir: int):
     global rob_x, rob_y, rob_dir
     dir = (dir+4) % 4  # keep goal dir in 0..3 
     turn = dir - rob_dir
@@ -156,15 +156,16 @@ def go_to(dir):
     if turn:
         if DEBUG:
             LCDSetPrintf(13,0, "Turn %d %d   ", turn*90, A_SPEED)
-        VWTurn(turn*90, A_SPEED)  # turn 
+        VWTurn(turn*90, ang_speed=A_SPEED)  # turn 
         VWWait()
   
     if DEBUG:
         LCDSetPrintf(13,0, "Straight %d %d   ", DIST, SPEED)
-    VWStraight(DIST, SPEED)    # go one step 
+
+    VWStraight(DIST, lin_speed=SPEED)    # go one step 
     VWWait()
 
-    cur_x, cur_y, cur_p = VWGetPosition()
+    (cur_x, cur_y), cur_p = VWGetPosition()
     if DEBUG:
         LCDSetPrintf(14,0, "X %d Y %d Phi %d   ", cur_x, cur_y, cur_p)
 
@@ -205,7 +206,7 @@ def explore():
 
     if GRAPH:
         LCDSetPos(0,0)
-        LCDPrintf("Pos[%2d,%2d,%1d]", rob_x,rob_y,rob_dir)
+        LCDPrintf("Pos[%2d,%2d,%1d]", rob_x, rob_y, rob_dir)
         if left_open: LCDSetPrintf(0,13,"<")
         else: LCDSetPrintf(0,13,"|")
         if front_open: LCDSetPrintf(0,14,"^")
@@ -254,7 +255,7 @@ def print_map():
     LCDPrintf("Map distances\n")
     for i in range(5,-1,-1):
         for j in range(4):
-          LCDPrintf("%3d",map[i][j])
+          LCDPrintf("%3d", map[i][j])
         if i>0: LCDPrintf("\n")
   
 
@@ -336,7 +337,7 @@ def build_path(i, j, len):
             path[k] = 1 # west 
         else:
             LCDPrintf("ERROR") # AUBeep()
-            KEYWait(ANYKEY)
+            KEYWait()
             
         ''' mark path in maze on LCD '''
         if i<=5 and j<=6:
@@ -362,7 +363,7 @@ def drive_path(len, reverse: bool):
             go_to(path[i]+2)
 
         if rob_dir != 0: # back in start field 
-            VWTurn(-rob_dir*90, A_SPEED)  # turn 
+            VWTurn(-rob_dir*90, ang_speed=A_SPEED)  # turn 
             VWWait()
             rob_dir = 0
     else:
@@ -388,7 +389,7 @@ def main():
     key = KEYGet()
     DEBUG = int(key == KEY3)
     if key == KEY2:
-        VWTurn(90, 90)
+        VWTurn(90, ang_speed=90)
         VWWait()
     if key == KEY4:
         return 0
@@ -400,7 +401,7 @@ def main():
 
     ''' back in [0,0] turn robot to original direction '''
     if rob_dir != 0:
-        VWTurn( -rob_dir*90, A_SPEED)  # turn 
+        VWTurn( -rob_dir*90, ang_speed=A_SPEED)  # turn 
         VWWait()
         rob_dir = 0
 
@@ -434,7 +435,7 @@ def main():
             print_map_W()
             LCDSetPos(0,0)
             LCDPrintf("Path length: %3d", path_len)
-            build_path(goalY,goalX,path_len)
+            build_path(goalY, goalX, path_len)
 
             while True:  # optional data display 
                 LCDMenu("Map","Mrk","Maz","DRV")
