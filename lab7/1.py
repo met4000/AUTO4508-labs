@@ -10,6 +10,8 @@ A_SPEED = 45
 THRESHOLD = 175
 MAZE_SIZE = 16
 
+EPSILON = 0.01
+
 
 mark = [([0]*MAZE_SIZE) for i in range(MAZE_SIZE)]   # 1 if visited
 ''' pos.0,0 is bottom left, dir. 0 is facing up (north) '''
@@ -162,8 +164,44 @@ def go_to(dir: int):
     if DEBUG:
         LCDSetPrintf(13,0, "Straight %d %d   ", DIST, SPEED)
 
-    VWStraight(DIST, lin_speed=SPEED)    # go one step 
-    VWWait()
+    # old dead reckoning drive straight:
+    # VWStraight(DIST, lin_speed=SPEED)    # go one step 
+    # VWWait()
+
+    KP = 5
+    STRAIGHT_SPEED = 50
+
+    PSD_TARGET = 130
+    PSD_FRONT_TARGET = 115
+
+    # driving straight using sensors:
+    # mov_start_pos, _ = VWGetPosition().as_float()
+    mov_start_psd = PSDGet(PSD_FRONT)
+    mov_end_psd = (round((mov_start_psd - PSD_FRONT_TARGET) / DIST) - 1) * DIST + PSD_FRONT_TARGET
+    while True:
+        left_psd_raw = PSDGet(PSD_LEFT)
+        right_psd_raw = PSDGet(PSD_RIGHT)
+
+        left_psd = left_psd_raw % DIST
+        right_psd = right_psd_raw % DIST
+
+        # scaled from approx -1 to 1
+        left_err = left_psd / PSD_TARGET - 1
+        right_err = 1 - right_psd / PSD_TARGET
+
+        error = left_err + right_err
+        offset = KP * error
+
+        MOTORDualDrive(1, 2, speed=STRAIGHT_SPEED, offset=offset, overflow_coeff=1)
+
+        # curr_pos, _ = VWGetPosition().as_float()
+        # if abs(curr_pos - mov_start_pos) >= DIST - EPSILON:
+        #     break
+
+        curr_psd = PSDGet(PSD_FRONT)
+        if curr_psd <= mov_end_psd + EPSILON + 10:
+            break
+    VWStop()
 
     (cur_x, cur_y), cur_p = VWGetPosition()
     if DEBUG:
@@ -380,6 +418,8 @@ def main():
     @AUTHOR    Thomas Braunl, UWA, 1998.
     -- Updated 2017
     '''
+
+    VWStop()
     
     global rob_x, rob_y, rob_dir
     LCDPrintf("MAZE\nfull search\n\n")
