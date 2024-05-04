@@ -1,38 +1,32 @@
 #!/usr/bin/env python3
-from eye import *
 
-#include "eyebot.h"
+# * modified version of the maze.py maze example program from eyesimX
 
-#include <math.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-
-#define DIST     360
-#define SPEED    180
-#define ASPEED    45
-#define THRES    175
-#define MAZESIZE  16
+from eye import * # type: ignore
 
 DIST = 360
 SPEED = 180
-ASPEED = 45
-THRES = 175
-MAZESIZE = 16
+A_SPEED = 45
+THRESHOLD = 175
+MAZE_SIZE = 16
 
+
+mark = [([0]*MAZE_SIZE) for i in range(MAZE_SIZE)]   # 1 if visited
 ''' pos.0,0 is bottom left, dir. 0 is facing up (north) '''
-mark = [([0]*MAZESIZE) for i in range(MAZESIZE)]   # 1 if visited
-#int wall[MAZESIZE+1][MAZESIZE+1][2]  ''' 1 if wall, 0 if free, -1 if unknown '''
-wall = [0]*(MAZESIZE+1)
+
+wall: list[list[list[int]]] = [0]*(MAZE_SIZE+1) # type: ignore
+''' 1 if wall, 0 if free, -1 if unknown '''
+
 for i in range(len(wall)):
-    wall[i] = [0]*(MAZESIZE+1)
-for i in range(MAZESIZE+1):
-    for j in range(MAZESIZE+1):
+    wall[i] = [0]*(MAZE_SIZE+1) # type: ignore
+for i in range(MAZE_SIZE+1):
+    for j in range(MAZE_SIZE+1):
         wall[i][j] = [0]*2
 '''  BOTTOM: wall[x][y][0]  LEFT: wall[x][y][1] '''
-map = [([0]*MAZESIZE) for i in range(MAZESIZE)]     #distance to goal 
-nmap = [([0]*MAZESIZE) for i in range(MAZESIZE)]    #copy
-path = [0]*MAZESIZE*MAZESIZE    #shortest path
+
+map = [([0]*MAZE_SIZE) for i in range(MAZE_SIZE)]     # distance to goal 
+n_map = [([0]*MAZE_SIZE) for i in range(MAZE_SIZE)]    # copy
+path = [0]*MAZE_SIZE*MAZE_SIZE    # shortest path
 
 GRAPH=1
 DEBUG=0
@@ -43,8 +37,8 @@ DEBUG2=0
 def print_mark_W():
     ''' print to window (sim. only) '''
     print("MARK\n")
-    for i in range(MAZESIZE-1,-1,-1):
-        for j in range(0,MAZESIZE):
+    for i in range(MAZE_SIZE-1,-1,-1):
+        for j in range(0,MAZE_SIZE):
           if (mark[i][j]): print("x ")
           else: print(". ")
         print("\n")
@@ -65,9 +59,9 @@ def print_mark():
     print maze as explored by robot.  '''
 def print_maze_W():
     print("MAZE\n")
-    for i in range(MAZESIZE,-1,-1):
-        for j in range(0,MAZESIZE+1):
-            if (wall[i][j][1]==1): print("|")  #left
+    for i in range(MAZE_SIZE,-1,-1):
+        for j in range(0,MAZE_SIZE+1):
+            if (wall[i][j][1]==1): print("|")  # left
             elif (wall[i][j][1]==0): print(" ")
             else: print(".")
             if (wall[i][j][0]==1): print("_")  # bottom
@@ -82,10 +76,10 @@ def print_maze():
     LCDSetPos(1,0)
     for i in range(5,-1,-1):
         for j in range(0,7):
-            if (wall[i][j][1]==1): LCDPrintf("|")  #left 
+            if (wall[i][j][1]==1): LCDPrintf("|")  # left 
             elif (wall[i][j][1]==0): LCDPrintf(" ")
             else: LCDPrintf(".")
-            if (wall[i][j][0]==1): LCDPrintf("_")  #bottom 
+            if (wall[i][j][0]==1): LCDPrintf("_")  # bottom 
             elif (wall[i][j][0]==0): LCDPrintf(" ")
             else: LCDPrintf(".")
         if i>0: LCDPrintf("\n")
@@ -93,9 +87,9 @@ def print_maze():
 def wall_set(wall,x,y,z, v):
     if wall[x][y][z] == -1:
         wall[x][y][z] = v  # not seen before, set value
-    elif wall[x][y][z] != v:     #seen before and CONTRADITION 
-        wall[x][y][z] = 1        #assume wall to be safe 
-        LCDSetPrintf(0,0,"CONTRADICTION\n") #AUBeep()
+    elif wall[x][y][z] != v:     # seen before and CONTRADICTION 
+        wall[x][y][z] = 1        # assume wall to be safe 
+        LCDSetPrintf(0,0,"CONTRADICTION\n") # AUBeep()
 
 '''* maze_entry.
     enter recognized walls or doors.  '''
@@ -107,9 +101,9 @@ def maze_entry(x, y, dir, open):
     elif dir == 1:
         wall_set(wall, y, x, 1, int(not open))
     elif dir == 3:
-        wall_set(wall, y, x+1, 1, int(not open)) #right = left of next
+        wall_set(wall, y, x+1, 1, int(not open)) # right = left of next
 
-'''* robo position and orientation.
+'''* robot position and orientation.
    dir = 0, 1, 2, 3 equals: north, west, south, east.  '''
 rob_x = 0
 rob_y = 0
@@ -119,30 +113,32 @@ rob_dir = 0
     inits internal map of maze.
     set marks to 0 and walls to -1 (unknown).  '''
 def init_maze():
-    for i in range(MAZESIZE):
-        for j in range(MAZESIZE):
+    for i in range(MAZE_SIZE):
+        for j in range(MAZE_SIZE):
             mark[i][j] = 0
-    for i in range(MAZESIZE+1):
-        for j in range(MAZESIZE+1):
+    for i in range(MAZE_SIZE+1):
+        for j in range(MAZE_SIZE+1):
             wall[i][j][0] = -1
             wall[i][j][1] = -1 
 
-def xneighbor(x, dir):
-    if dir == 0: return x #north 
-    elif dir == 1: return x-1 #west  
-    elif dir == 2: return x #south 
-    elif dir == 3: return x+1 # east  
+def x_neighbor(x: int, dir) -> int:
+    if dir == 0: return x # north 
+    elif dir == 1: return x-1 # west  
+    elif dir == 2: return x # south 
+    elif dir == 3: return x+1 # east
+    raise ValueError(f"unexpected dir value {dir}")
   
-def yneighbor(y, dir):
+def y_neighbor(y: int, dir) -> int:
     if dir == 0: return y+1 # north 
     elif dir == 1: return y # west  
     elif dir == 2: return y-1 # south 
-    elif dir == 3: return y # east  
+    elif dir == 3: return y # east
+    raise ValueError(f"unexpected dir value {dir}")
     
 
-def unmarked(y, x, dir):
+def unmarked(y: int, x: int, dir) -> int:
     dir = int((dir+4) % 4)
-    return not mark [yneighbor(y,dir)] [xneighbor(x,dir)]
+    return not mark [y_neighbor(y,dir)] [x_neighbor(x,dir)]
 
 
 
@@ -159,8 +155,8 @@ def go_to(dir):
 
     if turn:
         if DEBUG:
-            LCDSetPrintf(13,0, "Turn %d %d   ", turn*90, ASPEED)
-        VWTurn(turn*90, ASPEED)  # turn 
+            LCDSetPrintf(13,0, "Turn %d %d   ", turn*90, A_SPEED)
+        VWTurn(turn*90, A_SPEED)  # turn 
         VWWait()
   
     if DEBUG:
@@ -173,8 +169,8 @@ def go_to(dir):
         LCDSetPrintf(14,0, "X %d Y %d Phi %d   ", cur_x, cur_y, cur_p)
 
     rob_dir = dir
-    rob_x   = xneighbor(rob_x,rob_dir)
-    rob_y   = yneighbor(rob_y,rob_dir)
+    rob_x   = x_neighbor(rob_x,rob_dir)
+    rob_y   = y_neighbor(rob_y,rob_dir)
 
 
 
@@ -182,11 +178,11 @@ def go_to(dir):
     if ALL walls of a square are known, mark square as visited.
     this avoids unnecessary exploration.  '''
 def check_mark():
-    for i in range(1,MAZESIZE):
-        for j in range(0,MAZESIZE):
+    for i in range(1,MAZE_SIZE):
+        for j in range(0,MAZE_SIZE):
             ''' careful: watch boundaries!! i from 1 / j until size-1 '''
             if wall[i  ][j][0] != -1 and wall[i][j  ][1] != -1 \
-            and wall[i+1][j][0] != -1 and wall[i][j+1][1] != -1: #bottom / left, top / right 
+            and wall[i+1][j][0] != -1 and wall[i][j+1][1] != -1: # bottom / left, top / right 
                 mark[i][j] = 1
   
 
@@ -198,9 +194,9 @@ def check_mark():
 def explore():
     global rob_x, rob_y, rob_dir
     mark[rob_y][rob_x] = 1   # mark current square 
-    left_open  = int(PSDGet(PSD_LEFT) > THRES)
-    front_open = int(PSDGet(PSD_FRONT) > THRES)
-    right_open = int(PSDGet(PSD_RIGHT) > THRES)
+    left_open  = int(PSDGet(PSD_LEFT) > THRESHOLD)
+    front_open = int(PSDGet(PSD_FRONT) > THRESHOLD)
+    right_open = int(PSDGet(PSD_RIGHT) > THRESHOLD)
     maze_entry(rob_x,rob_y,rob_dir,       front_open)
     maze_entry(rob_x,rob_y,(rob_dir+1)%4, left_open)
     maze_entry(rob_x,rob_y,(rob_dir+3)%4, right_open)
@@ -245,8 +241,8 @@ def explore():
 '''* print shortest distances from start in X window (sim only).  '''
 def print_map_W():
     print("MAP\n")
-    for i in range(MAZESIZE-1,-1,-1):
-        for j in range(MAZESIZE):
+    for i in range(MAZE_SIZE-1,-1,-1):
+        for j in range(MAZE_SIZE):
             print("%3d",map[i][j])
         print("\n")
     print("\n")
@@ -267,38 +263,38 @@ def print_map():
     returns path length to goal.
     or -1 if no path could be found.  '''
 def shortest_path(goal_y, goal_x):
-    LCDSetPrintf(0,0, "                ") #clear top line 
+    LCDSetPrintf(0,0, "                ") # clear top line 
     LCDSetPrintf(0,0, "Map..")
-    for i in range(MAZESIZE):
-        for j in range(MAZESIZE):
-            map [i][j] = -1  #init
-            nmap[i][j] = -1
+    for i in range(MAZE_SIZE):
+        for j in range(MAZE_SIZE):
+            map [i][j] = -1  # init
+            n_map[i][j] = -1
             
     map [0][0] = 0
-    nmap[0][0] = 0
+    n_map[0][0] = 0
     iter=0
 
     while True:
         iter += 1
-        for i in range(MAZESIZE):
-            for j in range(MAZESIZE):
+        for i in range(MAZE_SIZE):
+            for j in range(MAZE_SIZE):
                 if map[i][j] == -1:
                     if i>0:
                         if not wall[i][j][0] and map[i-1][j] != -1:
-                            nmap[i][j] = map[i-1][j] + 1
-                    if i<MAZESIZE-1:
+                            n_map[i][j] = map[i-1][j] + 1
+                    if i<MAZE_SIZE-1:
                         if not wall[i+1][j][0] and map[i+1][j] != -1:
-                            nmap[i][j] = map[i+1][j] + 1
+                            n_map[i][j] = map[i+1][j] + 1
                     if j>0:
                         if not wall[i][j][1] and map[i][j-1] != -1:
-                            nmap[i][j] = map[i][j-1] + 1
-                    if j<MAZESIZE-1:
+                            n_map[i][j] = map[i][j-1] + 1
+                    if j<MAZE_SIZE-1:
                         if not wall[i][j+1][1] and map[i][j+1] != -1:
-                            nmap[i][j] = map[i][j+1] + 1
+                            n_map[i][j] = map[i][j+1] + 1
 
-        for i in range(MAZESIZE):
-            for j in range(MAZESIZE):
-                map[i][j] = nmap[i][j]  # copy back 
+        for i in range(MAZE_SIZE):
+            for j in range(MAZE_SIZE):
+                map[i][j] = n_map[i][j]  # copy back 
 
         if DEBUG2:
             print_map()
@@ -306,7 +302,7 @@ def shortest_path(goal_y, goal_x):
             LCDMenu("Next"," "," "," ")
             KEYWait(KEY1)
             LCDMenu(" "," "," "," ")
-        if map[goal_y][goal_x] != -1 or iter >= (MAZESIZE*MAZESIZE): break
+        if map[goal_y][goal_x] != -1 or iter >= (MAZE_SIZE*MAZE_SIZE): break
     
     LCDPrintf("done\n")
     return map[goal_y][goal_x]
@@ -327,7 +323,7 @@ def build_path(i, j, len):
         if i>0 and not wall[i][j][0] and map[i-1][j] == k:
             i -= 1
             path[k] = 0 # north 
-        elif i<MAZESIZE-1 and not wall[i+1][j][0] and map[i+1][j] == k:
+        elif i<MAZE_SIZE-1 and not wall[i+1][j][0] and map[i+1][j] == k:
             i += 1
             path[k] = 2 # south 
 
@@ -335,11 +331,11 @@ def build_path(i, j, len):
             j -= 1
             path[k] = 3 # east 
 
-        elif j<MAZESIZE-1 and not wall[i][j+1][1] and map[i][j+1] == k:
+        elif j<MAZE_SIZE-1 and not wall[i][j+1][1] and map[i][j+1] == k:
             j += 1
             path[k] = 1 # west 
         else:
-            LCDPrintf("ERROR") #AUBeep()
+            LCDPrintf("ERROR") # AUBeep()
             KEYWait(ANYKEY)
             
         ''' mark path in maze on LCD '''
@@ -355,18 +351,18 @@ def build_path(i, j, len):
 
 
 
-'''* drive path.
-  drive path after building it.
-  parametere specifies start to finish (0).
-  or finish to start (1).  '''
-def drive_path(len, reverse):
+def drive_path(len, reverse: bool):
+    '''
+    Drives the built path.
+    If :param:`reverse`, does finish to start. 
+    '''
     global rob_x, rob_y, rob_dir
     if reverse:
         for i in range(len-1,-1,-1):
             go_to(path[i]+2)
 
         if rob_dir != 0: # back in start field 
-            VWTurn(-rob_dir*90, ASPEED)  # turn 
+            VWTurn(-rob_dir*90, A_SPEED)  # turn 
             VWWait()
             rob_dir = 0
     else:
@@ -375,11 +371,15 @@ def drive_path(len, reverse):
 
 
 
-'''* main program.
+def main():
+    '''
+    main program.
     search maze from start in (0,0).
     search whole maze and generate map.
-    @AUTHOR    Thomas Braunl, UWA, 1998.-- Updated 2017  '''
-def main():
+    @AUTHOR    Thomas Braunl, UWA, 1998.
+    -- Updated 2017
+    '''
+    
     global rob_x, rob_y, rob_dir
     LCDPrintf("MAZE\nfull search\n\n")
     init_maze()
@@ -400,7 +400,7 @@ def main():
 
     ''' back in [0,0] turn robot to original direction '''
     if rob_dir != 0:
-        VWTurn( -rob_dir*90, ASPEED)  # turn 
+        VWTurn( -rob_dir*90, A_SPEED)  # turn 
         VWWait()
         rob_dir = 0
 
@@ -412,15 +412,15 @@ def main():
         goalY=0
         while True:
             LCDSetPos(0,0)
-            LCDPrintf("GOAL y,x: %2d %2d", goalY, goalX) #AUBeep()
+            LCDPrintf("GOAL y,x: %2d %2d", goalY, goalX) # AUBeep()
             if goalY<=5 and goalX <=6:
                 LCDSetPos(6-goalY,2*goalX+1)
             key = KEYGet()
             if key == KEY1:
-                goalY = (goalY+incr+MAZESIZE) % MAZESIZE
+                goalY = (goalY+incr+MAZE_SIZE) % MAZE_SIZE
                 break
             elif key == KEY2:
-                goalX = (goalX+incr+MAZESIZE) % MAZESIZE
+                goalX = (goalX+incr+MAZE_SIZE) % MAZE_SIZE
                 break
             elif key == KEY3:
                 incr = -incr
@@ -450,11 +450,11 @@ def main():
                     break
                 elif key == KEY4:
                     break
-            drive_path(path_len,0) # drive start to finish 
-            drive_path(path_len,1) # drive finish to start 
+            drive_path(path_len, False) # drive start to finish 
+            drive_path(path_len, True) # drive finish to start 
         else:
             LCDSetPos(0,0)
-            LCDPrintf("No path exists!") #AUBeep() 
+            LCDPrintf("No path exists!") # AUBeep() 
 
         LCDMenu("REP"," "," ","END")
         if KEYGet() == KEY4: break
