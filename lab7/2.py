@@ -6,25 +6,26 @@ from eyepy import *
 # cheat and auto align the robot when starting
 START_ALIGNED = True
 
-# world units per block
-X_RESOLUTION = 10
-Y_RESOLUTION = 10
+ADD_FREE = False
 
-SEARCH_LIN_SPEED = 400 # mm/s
+# world units per block
+X_RESOLUTION = 70
+Y_RESOLUTION = 70
+
+SEARCH_LIN_SPEED = 600 # mm/s
 SEARCH_TURN_SPEED = 90 # deg/s
-SEARCH_LIDAR_RANGE = 140 # deg
+SEARCH_LIDAR_RANGE = 100 # deg
 SEARCH_LIDAR_POINTS = 15
 
-SEARCH_OBSTACLE_MIN_DIST = 400 # mm
-SEARCH_NEW_PATH_MIN_DIST = 800 # mm
+SEARCH_OBSTACLE_MIN_DIST = 500 # mm
 
-SEARCH_SCAN_INTERVAL = 1500 # ms
+SEARCH_SCAN_INTERVAL = 1800 # ms
 
-SCAN_LIDAR_RANGE = 180 # deg
-SCAN_LIDAR_POINTS = 180
+SCAN_LIDAR_RANGE = 360 # deg
+SCAN_LIDAR_POINTS = 360
 
 SCAN_MAX_VALUE = 9000 # ignore values larger than this amount
-SCAN_FREE_DIST = 300 # world units
+SCAN_FREE_DIST = 1000 # world units
 
 
 class BlockState(Enum):
@@ -76,16 +77,13 @@ def lidar_rel_bearing(i: int, *, range: int, n_points: int) -> float:
     """deg"""
     return ((n_points // 2) - i) / n_points * range
 
-# TODO set some area as free
+# TODO improve free area
 def update_from_lidar():
     lidar_distances = LIDARGet(range=SCAN_LIDAR_RANGE, n_points=SCAN_LIDAR_POINTS)
 
     curr_pos, curr_bearing_deg = VWGetPosition().as_float()
 
-    min_x = curr_pos.x - SCAN_FREE_DIST
-    max_x = curr_pos.x + SCAN_FREE_DIST
-    min_y = curr_pos.y - SCAN_FREE_DIST
-    max_y = curr_pos.y + SCAN_FREE_DIST
+    min_dist = SCAN_FREE_DIST
 
     for i, dist in enumerate(lidar_distances):
         if dist > SCAN_MAX_VALUE: continue
@@ -96,18 +94,29 @@ def update_from_lidar():
         point_vector = Vector.from_polar(magnitude=dist, angle=point_bearing_rad)
         point = curr_pos + point_vector
 
-        if point.x > min_x: min_x = point.x + 1
-        if point.x < max_x: max_x = point.x - 1
-        if point.y > min_y: min_y = point.y + 1
-        if point.y < max_y: max_y = point.y - 1
+        dist = abs(curr_pos - point)
+        if dist < min_dist: min_dist = dist
 
         block = IntPoint(math.floor(point.x / X_RESOLUTION), math.floor(point.y / Y_RESOLUTION))
 
         update_block_state(block, BlockState.OCCUPIED)
     
-    for x in range(math.ceil(min_x), math.floor(max_x + 1)):
-        for y in range(math.ceil(min_y), math.floor(max_y + 1)):
-            block = IntPoint(math.floor(x / X_RESOLUTION), math.floor(y / Y_RESOLUTION))
+    if ADD_FREE:
+        curr_block = IntPoint(math.floor(curr_pos.x / X_RESOLUTION), math.floor(curr_pos.y / Y_RESOLUTION))
+        for dx, dy in itertools.product(
+            range(math.floor(-min_dist / X_RESOLUTION), math.ceil(min_dist / X_RESOLUTION) + 1),
+            range(math.floor(-min_dist / Y_RESOLUTION), math.ceil(min_dist / Y_RESOLUTION) + 1),
+        ):
+            block_offset = IntVector(dx, dy)
+            offset = Vector(dx * X_RESOLUTION, dy * Y_RESOLUTION)
+
+            if abs(offset) >= min_dist - abs(Vector(X_RESOLUTION, Y_RESOLUTION)): continue
+            
+            deg_diff = abs(rad_to_deg(offset.get_angle()) - curr_bearing_deg)
+            if deg_diff > 180: deg_diff = 360 - deg_diff
+            if deg_diff > SCAN_LIDAR_RANGE // 2 - 1: continue
+
+            block = curr_block + block_offset
             update_block_state(block, BlockState.FREE)
 
 VWStop()
@@ -116,7 +125,6 @@ if START_ALIGNED:
     x, y, z, _ = SIMGetRobot(0)
     SIMSetRobot(0, x, y, z, 0)
 VWSetPosition((0, 0), 0)
-left_turn = True
 
 while True:
     update_from_lidar()
@@ -133,27 +141,9 @@ while True:
             # obstacle
             VWStop()
 
-            turn_sign = 1 if left_turn else -1
-
-            lidar_dists = LIDARGet(range=360, n_points=360)
-            valid_indices = set(range(len(lidar_dists)))
-            for i, dist in enumerate(lidar_dists):
-                if (i - len(lidar_dists) // 2) * turn_sign > 0:
-                    valid_indices.discard(i)
-
-                if dist < SEARCH_NEW_PATH_MIN_DIST:
-                    # ? eliminate adjacent by some amount of degrees
-                    valid_indices.difference_update([i + delta for delta in range(-10, 10 + 1)])
-
-                if dist <= SEARCH_LIDAR_RANGE:
-                    # ? eliminate adjacent by some amount of degrees
-                    valid_indices.difference_update([i + delta for delta in range(-SEARCH_LIDAR_RANGE//2, SEARCH_LIDAR_RANGE//2 + 1)])
-            valid_turns: list[float] = [lidar_rel_bearing(i, range=360, n_points=360) for i in valid_indices]
-
-            turn_amount = random.choice(valid_turns)
+            turn_amount = random.randint(80, 150)
             VWTurn(round(turn_amount), ang_speed=SEARCH_TURN_SPEED)
 
-            left_turn = not left_turn
             VWWait()
             break
     
