@@ -1,3 +1,4 @@
+from __future__ import annotations
 from enum import auto
 import random
 from eyepy import *

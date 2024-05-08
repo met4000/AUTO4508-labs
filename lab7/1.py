@@ -2,6 +2,7 @@
 
 # * modified version of the maze.py maze example program from eyesimX
 
+from __future__ import annotations
 from eyepy import *
 
 DIST = 360
